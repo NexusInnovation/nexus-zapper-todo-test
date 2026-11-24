@@ -48,17 +48,17 @@ parameters:
         serviceConnection: "sc-nexus-zapper-todo-dev"
         hasDeploymentSlots: false
 
-      - name: "Uat"
-        environmentCode: "uat"
-        resourceGroupName: "zapper-todo-uat-rg"
-        serviceConnection: "sc-nexus-zapper-todo-uat"
-        hasDeploymentSlots: false
+      # - name: "Uat"
+      #   environmentCode: "uat"
+      #   resourceGroupName: "zapper-todo-uat-rg"
+      #   serviceConnection: "sc-nexus-zapper-todo-uat"
+      #   hasDeploymentSlots: false
 
-      - name: "Prod"
-        environmentCode: "prod"
-        resourceGroupName: "zapper-todo-prod-rg"
-        serviceConnection: "sc-nexus-zapper-todo-prod"
-        hasDeploymentSlots: false
+      # - name: "Prod"
+      #   environmentCode: "prod"
+      #   resourceGroupName: "zapper-todo-prod-rg"
+      #   serviceConnection: "sc-nexus-zapper-todo-prod"
+      #   hasDeploymentSlots: false
 
   - name: applications
     type: object
