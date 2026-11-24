@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+cd src/frontend || exit 1
+pnpm exec lint-staged

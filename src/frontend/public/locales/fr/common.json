@@ -1,0 +1,24 @@
+{
+  "appName": "Zapper Todo",
+  "navigation": {
+    "dashboard": "Tableau de bord"
+  },
+  "layout": {
+    "primaryNavigation": "Navigation principale",
+    "companyLogoAlt": "Logo de Zapper Todo",
+    "openNavigationMenu": "Ouvrir le menu de navigation",
+    "profileName": "Utilisateur",
+    "profileSubtitle": "Profil"
+  },
+  "languageSwitcher": {
+    "ariaLabel": "Changer de langue",
+    "languages": {
+      "en": "English",
+      "fr": "Français"
+    }
+  },
+  "notFound": {
+    "title": "404",
+    "description": "Page introuvable."
+  }
+}

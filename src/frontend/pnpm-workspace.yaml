@@ -1,0 +1,2 @@
+minimumReleaseAgeExclude:
+  - '@typescript-eslint/parser@8.74.0'
