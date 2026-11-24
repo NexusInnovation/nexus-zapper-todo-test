@@ -6,7 +6,13 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage']),
+  globalIgnores([
+    'dist',
+    'coverage',
+    '.features-gen',
+    'test-results',
+    'playwright-report',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -22,7 +28,13 @@ export default defineConfig([
     rules: {},
   },
   {
-    files: ['vite.config.ts', 'vitest.config.ts', 'eslint.config.ts'],
+    files: [
+      'vite.config.ts',
+      'vitest.config.ts',
+      'eslint.config.ts',
+      'playwright.config.ts',
+      'e2e/**/*.ts',
+    ],
     languageOptions: {
       globals: globals.node,
     },

@@ -1,3 +1,6 @@
 .env
 bin/
 obj/
+
+# BDD run results
+.zapper/behaviour-driven-development/results/

@@ -26,3 +26,8 @@ coverage
 
 # Vite cache
 .vite/
+
+# BDD suite (playwright-bdd)
+.features-gen/
+test-results/
+playwright-report/
