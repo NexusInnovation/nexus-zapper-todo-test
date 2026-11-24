@@ -11,8 +11,6 @@ pr:
       - develop
 
 parameters:
-  # TODO: the infra/ folder does not exist yet; scaffold it (bicep-nexus) before the first run,
-  # because any change under infra/ or pipelines/templates/infra/ triggers the infra build.
   - name: infrastructureDirectory
     type: string
     default: "$(Build.SourcesDirectory)/infra"
@@ -31,7 +29,7 @@ parameters:
 
   - name: location
     type: string
-    default: "canadacentral"
+    default: "canadaeast"
 
   - name: scriptsDirectory
     type: string
@@ -46,19 +44,19 @@ parameters:
     default:
       - name: "Dev"
         environmentCode: "dev"
-        resourceGroupName: "rg-nexus-zapper-todo-dev"
+        resourceGroupName: "zapper-todo-dev-rg"
         serviceConnection: "sc-nexus-zapper-todo-dev"
         hasDeploymentSlots: false
 
       - name: "Uat"
         environmentCode: "uat"
-        resourceGroupName: "rg-nexus-zapper-todo-uat"
+        resourceGroupName: "zapper-todo-uat-rg"
         serviceConnection: "sc-nexus-zapper-todo-uat"
         hasDeploymentSlots: false
 
       - name: "Prod"
         environmentCode: "prod"
-        resourceGroupName: "rg-nexus-zapper-todo-prod"
+        resourceGroupName: "zapper-todo-prod-rg"
         serviceConnection: "sc-nexus-zapper-todo-prod"
         hasDeploymentSlots: false
 
@@ -79,19 +77,21 @@ parameters:
               runTests: true
               testPath: "$(Build.SourcesDirectory)/src/backend/tests"
               packageName: "Backend"
+              resourceNameOverride: "zapper-todo-{environmentCode}-app-api"
             componentFilters:
               - "src/backend/"
 
           - name: "frontend"
             # Project-owned pnpm variant of ../frontend/build-stage.yml (which uses npm ci).
             buildTemplate: "../custom/frontend-build-stage-pnpm.yml"
-            deployTemplate: "../frontend/deploy-stage-swa.yml"
+            deployTemplate: "../frontend/deploy-stage.yml"
             config:
               directoryPath: "$(Build.SourcesDirectory)/src/frontend"
               pnpmVersion: "12.8.1"
               runTests: true
               testScript: "test:run"
               packageName: "Frontend"
+              resourceNameOverride: "zapper-todo-{environmentCode}-app-web"
             componentFilters:
               - "src/frontend/"
 
