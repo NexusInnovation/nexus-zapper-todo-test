@@ -1,7 +1,7 @@
 ---
 status: approved
-baseline: not-run
-baseline-commit:
+baseline: passed
+baseline-commit: 3a71c2bc80f0af3b7934572d7228653a82c07af8
 run-command: pnpm --dir src/frontend regression
 result-format: junit-xml
 result-file: results/regression.xml
@@ -25,7 +25,7 @@ means the suite is not wired yet; `baseline` must be `passed` before `/goal` sta
 
 | Area                                                                                                        | Coverage  | Existing tests | Scenarios | Last run |
 | ----------------------------------------------------------------------------------------------------------- | --------- | -------------- | --------- | -------- |
-| [RG-01 Coquille de l'application et navigation](inventory.md#rg-01--coquille-de-lapplication-et-navigation) | partial   | 2              | 3         | not run  |
-| [RG-02 Sélecteur de langue](inventory.md#rg-02--sélecteur-de-langue)                                        | uncovered | 0              | 3         | not run  |
-| [RG-03 Composants partagés de l'interface](inventory.md#rg-03--composants-partagés-de-linterface)           | covered   | 2              | 0         | not run  |
-| [RG-04 Hôte de l'API et accès aux données](inventory.md#rg-04--hôte-de-lapi-et-accès-aux-données)           | partial   | 1              | 1         | not run  |
+| [RG-01 Coquille de l'application et navigation](inventory.md#rg-01--coquille-de-lapplication-et-navigation) | partial   | 2              | 3         | passed   |
+| [RG-02 Sélecteur de langue](inventory.md#rg-02--sélecteur-de-langue)                                        | uncovered | 0              | 3         | passed   |
+| [RG-03 Composants partagés de l'interface](inventory.md#rg-03--composants-partagés-de-linterface)           | covered   | 2              | 0         | passed   |
+| [RG-04 Hôte de l'API et accès aux données](inventory.md#rg-04--hôte-de-lapi-et-accès-aux-données)           | partial   | 1              | 1         | passed   |

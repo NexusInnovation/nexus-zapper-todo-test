@@ -8,7 +8,7 @@ writes its own row; the `report-run-zapper` skill reads it. Format:
 | ------------ | ------------------------- | ------------------------- | ----------- | ------------- | ------- | ---------- | ------- | -------------------------------------------------- |
 | `refine`     | 2026-11-24T16:47:43-05:00 | 2026-11-24T16:59:12-05:00 | 11 min      | not available | 8       | 0          | 0       | session timestamps; the CLI exposes no usage here |
 | `bdd`        | 2026-11-24T17:00:41-05:00 | 2026-11-24T17:29:26-05:00 | 29 min      | not available | 11      | 0          | 0       | session timestamps; the CLI exposes no usage here |
-| `regression` |                           |                           |             |               |         |            |         |                                                    |
+| `regression` | 2026-11-24T17:44:57-05:00 | 2026-11-24T18:03:41-05:00 | 19 min      | not available | 6       | 0          | 0       | session timestamps; the CLI exposes no usage here |
 | `plan`       |                           |                           |             |               |         |            |         |                                                    |
 | `goal`       |                           |                           |             |               |         |            |         |                                                    |
 | `report`     |                           |                           |             |               |         |            |         |                                                    |
@@ -16,3 +16,4 @@ writes its own row; the `report-run-zapper` skill reads it. Format:
 ## Agent activity
 
 - No subagents were used by the refine stage.
+- No subagents were used by the regression stage.
