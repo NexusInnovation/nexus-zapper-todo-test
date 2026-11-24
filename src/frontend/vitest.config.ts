@@ -8,7 +8,12 @@ export default mergeConfig(
       environment: 'jsdom',
       globals: true,
       setupFiles: './src/test/setup.ts',
-      exclude: [...configDefaults.exclude, 'e2e/**', '.features-gen/**'],
+      exclude: [
+        ...configDefaults.exclude,
+        'e2e/**',
+        '.features-gen/**',
+        '.features-gen-regression/**',
+      ],
       coverage: {
         provider: 'v8',
         reporter: ['text', 'html'],
