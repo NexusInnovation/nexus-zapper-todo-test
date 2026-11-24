@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 language: fr
 default-branch: main
 stack:
