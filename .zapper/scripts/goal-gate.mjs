@@ -4,31 +4,71 @@
 //   mark  (userPromptSubmitted): remembers the session when the prompt launches `/goal ... .zapper/goal.md`
 //   check (preToolUse): while the gate is not met, denies every tool of a marked session except read-only ones
 //   clear (sessionEnd): forgets the session
+//   preflight (no hook, used by the runner): prints the problems and exits 1 when the run may not start
 // Only the sessions that launched the goal are gated: the stages that produce the artifacts keep working.
-import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const GOAL_PROMPT = /^\s*\/goal\b[^\n]*\.zapper[\\/]goal\.md/i;
-const READ_ONLY_TOOLS = new Set(["view", "glob", "grep", "rg", "ask_user", "skill", "report_intent"]);
+// The CLI hands the hook either the raw `/goal ...` prompt or its autopilot rewrite
+// ("The user set this explicit autopilot objective with /autopilot: ... .zapper/goal.md").
+const GOAL_PROMPT =
+  /(?:^\s*\/(?:goal|autopilot)\b[^\n]*|^[^\n]*autopilot objective[\s\S]*?)\.zapper[\\/]goal\.md/i;
+const READ_ONLY_TOOLS = new Set([
+  "view",
+  "glob",
+  "grep",
+  "rg",
+  "ask_user",
+  "skill",
+  "report_intent",
+]);
 
 const ARTIFACTS = [
-  { name: "Project configuration", file: ".zapper/config.md", stage: "workspace-check-zapper (config template)" },
-  { name: "Refined input", file: ".zapper/input/README.md", stage: "refine-input-zapper" },
-  { name: "BDD suite", file: ".zapper/behaviour-driven-development/README.md", stage: "generate-bdd-zapper" },
+  {
+    name: "Project configuration",
+    file: ".zapper/config.md",
+    stage: "workspace-check-zapper (config template)",
+  },
+  {
+    name: "Refined input",
+    file: ".zapper/input/README.md",
+    stage: "refine-input-zapper",
+  },
+  {
+    name: "BDD suite",
+    file: ".zapper/behaviour-driven-development/README.md",
+    stage: "generate-bdd-zapper",
+  },
   {
     name: "Regression baseline",
     file: ".zapper/regression-baseline/README.md",
     stage: "regression-baseline-zapper",
     passed: true,
   },
-  { name: "Implementation plan", file: ".zapper/run/plan/README.md", stage: "plan-implementation-zapper" },
+  {
+    name: "Implementation plan",
+    file: ".zapper/run/plan/README.md",
+    stage: "plan-implementation-zapper",
+  },
 ];
 
 function frontmatterValue(text, key) {
-  const frontmatter = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n---/.exec(text)?.[1] ?? "";
-  const value = new RegExp(`^${key}:[ \\t]*([^\\s#][^\\n#]*?)[ \\t]*(?:#.*)?$`, "m").exec(frontmatter)?.[1];
+  const frontmatter =
+    /^\uFEFF?---\r?\n([\s\S]*?)\r?\n---/.exec(text)?.[1] ?? "";
+  const value = new RegExp(
+    `^${key}:[ \\t]*([^\\s#][^\\n#]*?)[ \\t]*(?:#.*)?$`,
+    "m",
+  ).exec(frontmatter)?.[1];
   return value?.replace(/^["']|["']$/g, "");
 }
 
@@ -36,23 +76,53 @@ function readIfExists(path) {
   return existsSync(path) ? readFileSync(path, "utf8") : null;
 }
 
+// An approved suite must hold at least one scenario file: a carried-over README alone is not a suite.
+function hasFeature(workspace, bddReadme) {
+  const featuresPath =
+    frontmatterValue(bddReadme, "features-path") ??
+    ".zapper/behaviour-driven-development/stories";
+  const root = join(workspace, featuresPath);
+  if (!existsSync(root)) return false;
+  return readdirSync(root, { recursive: true }).some((entry) =>
+    String(entry).endsWith(".feature"),
+  );
+}
+
 // Returns what blocks the start of a run, one sentence per problem; empty when the run may start.
 export function gateProblems(workspace) {
   const problems = [];
   for (const { name, file, stage, passed } of ARTIFACTS) {
     const text = readIfExists(join(workspace, file));
-    if (text === null) problems.push(`${name} is missing (${file}): run ${stage}.`);
+    if (text === null)
+      problems.push(`${name} is missing (${file}): run ${stage}.`);
     else if (frontmatterValue(text, "status") !== "approved") {
-      problems.push(`${name} is not approved (${file} must show status: approved): run ${stage}.`);
+      problems.push(
+        `${name} is not approved (${file} must show status: approved): run ${stage}.`,
+      );
     } else if (passed && frontmatterValue(text, "baseline") !== "passed") {
-      problems.push(`${name} has not passed (${file} must show baseline: passed): run ${stage}.`);
+      problems.push(
+        `${name} has not passed (${file} must show baseline: passed): run ${stage}.`,
+      );
+    } else if (
+      file.includes("behaviour-driven-development") &&
+      !hasFeature(workspace, text)
+    ) {
+      problems.push(
+        `${name} has no .feature file in its features-path (${file}): run ${stage}.`,
+      );
     }
   }
-  const decisions = readIfExists(join(workspace, ".zapper/run/plan/decisions.md"));
+  const decisions = readIfExists(
+    join(workspace, ".zapper/run/plan/decisions.md"),
+  );
   if (decisions === null) {
-    problems.push("The decision log of the plan is missing (.zapper/run/plan/decisions.md): run plan-implementation-zapper.");
+    problems.push(
+      "The decision log of the plan is missing (.zapper/run/plan/decisions.md): run plan-implementation-zapper.",
+    );
   } else if (/\*\*Status\*\*:\s*proposed\b/i.test(decisions)) {
-    problems.push("A decision of the plan is still proposed (.zapper/run/plan/decisions.md): approve it in the plan.");
+    problems.push(
+      "A decision of the plan is still proposed (.zapper/run/plan/decisions.md): approve it in the plan.",
+    );
   }
   return problems;
 }
@@ -72,14 +142,20 @@ export function findWorkspace(from, fallback) {
   }
 }
 
-const sessionKey = (payload) => String(payload.sessionId ?? payload.session_id ?? "").replace(/[^\w-]/g, "");
-const toolOf = (payload) => String(payload.toolName ?? payload.tool_name ?? "").toLowerCase();
+const sessionKey = (payload) =>
+  String(payload.sessionId ?? payload.session_id ?? "").replace(/[^\w-]/g, "");
+const toolOf = (payload) =>
+  String(payload.toolName ?? payload.tool_name ?? "").toLowerCase();
 
 function log(workspace, entry) {
   try {
     const dir = join(workspace, ".zapper", "run");
     mkdirSync(dir, { recursive: true });
-    const line = JSON.stringify({ time: new Date().toISOString(), hook: "goal-gate", ...entry });
+    const line = JSON.stringify({
+      time: new Date().toISOString(),
+      hook: "goal-gate",
+      ...entry,
+    });
     appendFileSync(join(dir, "hooks.log.jsonl"), `${line}\n`);
   } catch {
     // The log must never decide the outcome of the gate.
@@ -112,7 +188,11 @@ export function handle(event, payload, { workspace, stateDir }) {
       mkdirSync(stateDir, { recursive: true });
       writeFileSync(marker, new Date().toISOString());
     }
-    log(workspace, { event: "userPromptSubmitted", result: problems.length ? "refused" : "passed", detail: problems });
+    log(workspace, {
+      event: "userPromptSubmitted",
+      result: problems.length ? "refused" : "passed",
+      detail: problems,
+    });
     return "";
   }
 
@@ -128,14 +208,33 @@ export function handle(event, payload, { workspace, stateDir }) {
   } catch (error) {
     reason = `Zapper refuses to start the goal: the approval gate could not be checked (${error.message}).`;
   }
-  log(workspace, { event: "preToolUse", tool: toolOf(payload), result: "denied", detail: reason });
-  return JSON.stringify({ permissionDecision: "deny", permissionDecisionReason: reason });
+  log(workspace, {
+    event: "preToolUse",
+    tool: toolOf(payload),
+    result: "denied",
+    detail: reason,
+  });
+  return JSON.stringify({
+    permissionDecision: "deny",
+    permissionDecisionReason: reason,
+  });
 }
 
 function main() {
   const event = process.argv[2];
+  if (event === "preflight") {
+    const problems = gateProblems(findWorkspace(process.cwd(), process.cwd()));
+    if (problems.length === 0) {
+      console.log("Zapper gate: ready.");
+      return 0;
+    }
+    console.error(refusal(problems));
+    return 1;
+  }
   if (!["mark", "check", "clear"].includes(event)) {
-    console.error("Usage: goal-gate.mjs <mark|check|clear>, hook payload on stdin");
+    console.error(
+      "Usage: goal-gate.mjs <mark|check|clear|preflight>, hook payload on stdin",
+    );
     return 2;
   }
   let payload = {};
@@ -144,7 +243,11 @@ function main() {
   } catch {
     // An unreadable payload leaves the session ungated rather than blocking every tool.
   }
-  const scriptRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+  const scriptRoot = resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    "..",
+    "..",
+  );
   const workspace = findWorkspace(payload.cwd ?? process.cwd(), scriptRoot);
   const stateDir = join(tmpdir(), "zapper-goal-sessions");
   const output = handle(event, payload, { workspace, stateDir });
@@ -152,4 +255,8 @@ function main() {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) process.exit(main());
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+)
+  process.exit(main());

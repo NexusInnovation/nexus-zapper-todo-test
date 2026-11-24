@@ -1,6 +1,6 @@
 ---
 status: draft
-features-path: .zapper/behaviour-driven-development/stories
+features-path:
 run-command:
 result-format:
 result-file:
@@ -20,7 +20,7 @@ exists.
 
 ## Stories
 
-| Story                                                      | Requirements | Scenarios | Last run |
-| ---------------------------------------------------------- | ------------ | --------- | -------- |
-| [<Story title>](stories/<story-slug>/<story-slug>.feature) | <n>          | <n>       | not run  |
-| [Non-functional: <Category>](stories/nfr-<category>/nfr-<category>.feature) | <n> | <n> | not run  |
+| Story                                                                       | Requirements | Scenarios | Last run |
+| --------------------------------------------------------------------------- | ------------ | --------- | -------- |
+| [<Story title>](stories/<story-slug>/<story-slug>.feature)                  | <n>          | <n>       | not run  |
+| [Non-functional: <Category>](stories/nfr-<category>/nfr-<category>.feature) | <n>          | <n>       | not run  |

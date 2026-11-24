@@ -37,21 +37,21 @@ If you change the plugin after installing it, install it again to pick up the ch
 Everything a run needs is in `.zapper/`: no personal skill and no extra prompt. Project-specific
 facts live in one file, [`config.md`](config.md) (stack, build, lint, test, e2e and security
 commands, language, protected environments and paths, critical areas, the realistic-volume
-performance dataset); the skills and `goal.md`
+performance dataset, the Azure runner); the skills and `goal.md`
 never name the host project.
 
 1. Copy [the template](skills/workspace-check-zapper/assets/config.md) to `.zapper/config.md`, fill
    it in and have the team set `status: approved`. Skip this when the file already exists.
 2. Run the stages in order, each one approved by the team before the next:
 
-| Stage                | Skill                         | Output                                  |
-| -------------------- | ----------------------------- | --------------------------------------- |
-| Refine input         | `refine-input-zapper`         | `.zapper/input/`                        |
-| Generate BDD         | `generate-bdd-zapper`         | `.zapper/behaviour-driven-development/` |
-| Wire BDD             | `wire-bdd-zapper`             | Test project shell, `features-path` and run contract in the BDD `README.md` |
-| Regression baseline  | `regression-baseline-zapper`  | `.zapper/regression-baseline/`          |
-| Plan implementation  | `plan-implementation-zapper`  | `.zapper/run/plan/`                     |
-| Report run           | `report-run-zapper`           | `.zapper/run/output-report/`            |
+| Stage               | Skill                        | Output                                                                      |
+| ------------------- | ---------------------------- | --------------------------------------------------------------------------- |
+| Refine input        | `refine-input-zapper`        | `.zapper/input/`                                                            |
+| Generate BDD        | `generate-bdd-zapper`        | `.zapper/behaviour-driven-development/`                                     |
+| Wire BDD            | `wire-bdd-zapper`            | Test project shell, `features-path` and run contract in the BDD `README.md` |
+| Regression baseline | `regression-baseline-zapper` | `.zapper/regression-baseline/`                                              |
+| Plan implementation | `plan-implementation-zapper` | `.zapper/run/plan/`                                                         |
+| Report run          | `report-run-zapper`          | `.zapper/run/output-report/`                                                |
 
 The BDD suite is derived from the stories and from `non-functional-requirements.md`: each
 non-functional requirement has an ID and an executable check (performance checks run on the
@@ -75,7 +75,8 @@ and tells you what is missing. A repository that holds all of them reaches `/goa
 .zapper/
 ├── plugin.json
 ├── skills/                         # Portable Zapper stages
-├── scripts/                        # Tool checks and hooks (skill description and goal length, goal gate)
+├── scripts/                        # Tool checks and hooks (skill description and goal length, goal gate, config reader)
+├── runner/                         # Unattended runs in Azure Container Instances (image, Bicep, PowerShell)
 ├── com.github.copilot/
 │   ├── agents/                     # Copilot CLI agent definitions
 │   └── hooks/
@@ -94,7 +95,7 @@ and tells you what is missing. A repository that holds all of them reaches `/goa
     └── output-report/              # Final report: summary.md and one file per story
 ```
 
-`plugin.json`, `skills/`, `scripts/`, `com.github.copilot/` and `goal.md` are Zapper tool files. They must
+`plugin.json`, `skills/`, `scripts/`, `runner/`, `com.github.copilot/` and `goal.md` are Zapper tool files. They must
 remain project-agnostic. These paths are the only ones every stage reads and writes.
 
 The `.feature` files have one copy. Their folder is the `features-path` of
@@ -150,7 +151,9 @@ approving the plan is the human approval of those decisions, and the run asks fo
 once a session launches `/goal ... .zapper/goal.md`, it denies every tool except the read-only ones
 until the configuration, the refined input, the BDD suite, the regression baseline (`baseline:
 passed`) and the plan are `status: approved` and no plan decision is `proposed`. Run it from the
-repository root, which is where Copilot CLI starts with `--plugin-dir .zapper`. Its tests:
+repository root, which is where Copilot CLI starts with `--plugin-dir .zapper`. The hook receives
+either the typed `/goal ...` prompt or the CLI's autopilot rewrite of it ("...explicit autopilot
+objective with /autopilot: ... .zapper/goal.md"); it gates both. Its tests:
 `node --test .zapper/scripts/goal-gate.test.mjs`.
 
 During the run, a choice the plan does not cover is assumed, marked `TODO(A<nn>)` in the code and
@@ -160,6 +163,52 @@ input does not name) is forbidden, not assumed.
 
 `config.md`, `input/`, `behaviour-driven-development/` and `regression-baseline/` are reusable
 across multiple runs. A run's plan and generated outputs belong in `run/`.
+
+## Launch a run in Azure Container Instances
+
+The goal can run unattended, away from a workstation, in an Azure Container Instances container
+group: the runner (Copilot CLI, the project toolchain and the Playwright browsers) plus the
+`runner.sidecars` of `config.md` (for example a database), which share `127.0.0.1`. There is no
+Docker inside the group, so the tests reach the services through the sidecars only. The runner
+clones the base branch, checks out the run branch, waits for `runner.ready`, runs `runner.setup`,
+checks the approval gate (`node .zapper/scripts/goal-gate.mjs preflight`) and launches:
+
+```text
+copilot --plugin-dir .zapper --trust-folder --allow-all --no-ask-user \
+  -p "/goal Achieve the objective of .zapper/goal.md --max-ai-credits <runner.max-ai-credits>"
+```
+
+`--trust-folder` is required in prompt mode: without it the plugin and repository hooks, so the
+`goal-gate`, do not load. `--max-ai-credits` is a soft cap checked between responses: a run can
+spend more than the cap before it pauses.
+
+| Script (`runner/`)            | Purpose                                                                                                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Initialize-ZapperRunner.ps1` | Once, then after a runner change: resource group, foundation (registry, identity, file share, Key Vault) and image (`az acr build`); lists the secrets to store. |
+| `Test-ZapperRunner.ps1`       | Same image and sidecars on the workstation with Docker; `-Mode Preflight` by default.                                                                            |
+| `Start-ZapperRun.ps1`         | Deploys one container group for a run: `-Mode Preflight` validates everything but `/goal`; the default mode runs the goal.                                       |
+| `Get-ZapperRun.ps1`           | State, `-Follow` for the logs, `-Download` for the outputs in `.zapper/runner-output/<RunId>`.                                                                   |
+| `Remove-ZapperRun.ps1`        | Deletes the container group of a run (`-All` for every run).                                                                                                     |
+
+Steps:
+
+1. Fill the `runner` block of `config.md` (Azure location, image toolchain, size, model, credit cap,
+   environment, Key Vault secret names, sidecars, readiness and setup commands). `COPILOT_GITHUB_TOKEN`
+   is a fine-grained PAT with the **Copilot Requests** permission; `GIT_TOKEN` a fine-grained PAT with
+   **Contents** read and write on this repository only.
+2. `./.zapper/runner/Initialize-ZapperRunner.ps1`, then store the secrets it lists.
+3. Optional: `./.zapper/runner/Test-ZapperRunner.ps1` to try the image locally.
+4. Push the base branch holding the approved artifacts, then
+   `./.zapper/runner/Start-ZapperRun.ps1 -Mode Preflight -Follow`.
+5. `./.zapper/runner/Start-ZapperRun.ps1 -Follow`. The runner pushes the run branch (`zapper/<RunId>`
+   by default) after each block and when it stops; starting again with the same `-Branch` resumes it.
+6. `./.zapper/runner/Get-ZapperRun.ps1 -RunId <RunId> -Download`, review the output report, then
+   `./.zapper/runner/Remove-ZapperRun.ps1 -RunId <RunId>`. Sign-off and Package stay on a workstation.
+
+The secrets stay in the Key Vault: `Start-ZapperRun.ps1` passes them as secure parameters, and the
+runner keeps `GIT_TOKEN` in a private credential file that the agent's shell does not see. The
+outputs (runner log, Copilot session export and logs, copy of `.zapper/run/`, commits, exit code)
+stay on the file share of the runner.
 
 ## After the run
 
