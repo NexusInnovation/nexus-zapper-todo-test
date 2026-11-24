@@ -1,0 +1,21 @@
+parameters:
+  - name: environment
+    type: object
+  - name: application
+    type: object
+  - name: component
+    type: object
+    default: {}
+
+steps:
+  - task: AzureAppServiceManage@0
+    displayName: 'Slot Swap ${{ parameters.component.name }}'
+    inputs:
+      azureSubscription: '${{ parameters.environment.serviceConnection }}'
+      ${{ if ne(coalesce(parameters.component.config.resourceNameOverride, ''), '') }}:
+        WebAppName: ${{ replace(parameters.component.config.resourceNameOverride, '{environmentCode}', parameters.environment.environmentCode) }}
+      ${{ else }}:
+        WebAppName: ${{ parameters.application.name }}-${{ lower(parameters.environment.environmentCode) }}-${{ parameters.component.name }}
+      SourceSlot: staging
+      SwapWithProduction: true
+      ResourceGroupName: '${{ parameters.environment.resourceGroupName }}'

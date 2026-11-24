@@ -1,0 +1,29 @@
+parameters:
+  - name: environment
+    type: object
+
+steps:
+  - download: current
+    artifact: Infra
+
+  - task: AzureCLI@2
+    displayName: 'Create or Update Azure Infrastructure - ${{ parameters.environment.name }}'
+    inputs:
+      useGlobalConfig: false
+      azureSubscription: '${{ parameters.environment.serviceConnection }}'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        $infra = '$(Pipeline.Workspace)/Infra'
+        $script = Join-Path $infra 'Deploy-BicepEnvironment.ps1'
+        if (-not (Test-Path $script)) {
+          # Projects not yet re-synced with bicep-nexus still ship the script under its former name
+          $script = Join-Path $infra 'deploy-bicep-for-environment.ps1'
+          Write-Host "##vso[task.logissue type=warning]Deploy-BicepEnvironment.ps1 not found, using the legacy deploy-bicep-for-environment.ps1. Re-sync the infrastructure with bicep-nexus."
+        }
+        if (-not (Test-Path $script)) {
+          throw "No deploy script in the Infra artifact: expected Deploy-BicepEnvironment.ps1 (or the legacy deploy-bicep-for-environment.ps1)."
+        }
+        & $script '${{ lower(parameters.environment.environmentCode) }}' -PipelineMode
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      workingDirectory: $(Pipeline.Workspace)/Infra

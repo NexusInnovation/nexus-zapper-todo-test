@@ -1,0 +1,31 @@
+parameters:
+  - name: applications
+    type: object
+  - name: infrastructureFilters
+    type: object
+  - name: pipelineFilters
+    type: object
+  - name: scriptsDirectory
+    type: string
+
+jobs:
+  - job: DetectChanges
+    displayName: Detect changes (all applications)
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - checkout: self
+        fetchDepth: '0'
+
+      - task: PowerShell@2
+        name: SetFlags
+        displayName: Compute change flags
+        inputs:
+          targetType: filePath
+          filePath: ${{ parameters.scriptsDirectory }}/detect-changes.ps1
+          pwsh: true
+        env:
+          APPLICATIONS_JSON: ${{ convertToJson(parameters.applications) }}
+          INFRASTRUCTURE_FILTERS_JSON: ${{ convertToJson(parameters.infrastructureFilters) }}
+          PIPELINE_FILTERS_JSON: ${{ convertToJson(parameters.pipelineFilters) }}
+          TEMPLATES_COMMON_DIRECTORY: ${{ parameters.scriptsDirectory }}/../templates/common

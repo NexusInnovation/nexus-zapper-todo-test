@@ -1,0 +1,163 @@
+parameters:
+  - name: applications
+    type: object
+  - name: environments
+    type: object
+  - name: infrastructureDirectory
+    type: string
+  - name: infrastructureFilters
+    type: object
+  - name: pipelineFilters
+    type: object
+  - name: location
+    type: string
+  - name: scriptsDirectory
+    type: string
+    default: 'pipelines/scripts'
+  - name: forceInfra
+    type: boolean
+    default: false
+
+  - name: postDeployValidationSteps
+    type: stepList
+    default: []
+
+stages:
+  - stage: Detect
+    displayName: Detect changes
+    jobs:
+      - template: ./detect-changes-steps.yml
+        parameters:
+          applications: ${{ parameters.applications }}
+          infrastructureFilters: ${{ parameters.infrastructureFilters }}
+          pipelineFilters: ${{ parameters.pipelineFilters }}
+          scriptsDirectory: ${{ parameters.scriptsDirectory }}
+
+  - stage: Build_Infra
+    displayName: Build Infra
+    dependsOn: Detect
+    condition: succeeded()
+    jobs:
+      - job: PackageInfra
+        displayName: Build Infra
+        pool:
+          vmImage: ubuntu-latest
+        condition: |
+          and(
+            not(canceled()),
+            or(
+              eq(stageDependencies.Detect.DetectChanges.outputs['SetFlags.infraChanged'], 'true'),
+              eq(${{ parameters.forceInfra }}, true)
+            )
+          )
+        steps:
+          - template: ../infra/build-stage.yml
+            parameters:
+              infrastructureDirectory: ${{ parameters.infrastructureDirectory }}
+              location: ${{ parameters.location }}
+              serviceConnection: ${{ parameters.environments[0].serviceConnection }}
+              environmentCode: ${{ parameters.environments[0].environmentCode }}
+
+  # Build stages: one per application, jobs per component
+  - ${{ each application in parameters.applications }}:
+      - stage: Build_${{ replace(replace(lower(application.name), '-', '_'), ' ', '_') }}
+        displayName: Build (${{ application.name }})
+        dependsOn: Detect
+        condition: succeeded()
+        jobs:
+          - template: ./build-application-components.yml
+            parameters:
+              application: ${{ application }}
+              scriptsDirectory: ${{ parameters.scriptsDirectory }}
+
+  # Deploy stages per environment and per application (jobs per component)
+  - ${{ each env in parameters.environments }}:
+      - ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+          # Infra deploy (optional per environment)
+          - stage: Deploy_${{ env.environmentCode }}_Infra
+            displayName: Deploy Infra (${{ env.name }})
+            dependsOn:
+              - Detect
+              - Build_Infra
+              - ${{ each application in parameters.applications }}:
+                  - Build_${{ replace(replace(lower(application.name), '-', '_'), ' ', '_') }}
+            condition: and(not(failed()), not(canceled()))
+            jobs:
+              - deployment: DeployInfra
+                displayName: Deploy Infra - ${{ env.name }}
+                pool:
+                  vmImage: ubuntu-latest
+                environment: ${{ env.name }}
+                condition: |
+                  and(
+                    succeeded(),
+                    or(
+                      eq(stageDependencies.Detect.DetectChanges.outputs['SetFlags.infraChanged'], 'true'),
+                      eq(${{ parameters.forceInfra }}, true)
+                    )
+                  )
+                strategy:
+                  runOnce:
+                    deploy:
+                      steps:
+                        - template: ../infra/deploy-stage.yml
+                          parameters:
+                            environment: ${{ env }}
+
+          # App deploy stages (per app, jobs per component)
+          - ${{ each application in parameters.applications }}:
+              - stage: Deploy_${{ env.environmentCode }}_${{ replace(replace(lower(application.name), '-', '_'), ' ', '_') }}
+                displayName: Deploy (${{ application.name }} → ${{ env.name }})
+                dependsOn:
+                  - Detect
+                  - Deploy_${{ env.environmentCode }}_Infra
+                  - Build_Infra
+                  - Build_${{ replace(replace(lower(application.name), '-', '_'), ' ', '_') }}
+                condition: and(not(failed()), not(canceled()))
+                jobs:
+                  - template: ./deploy-application-components.yml
+                    parameters:
+                      application: ${{ application }}
+                      environment: ${{ env }}
+
+          # Validation per environment (after all app deploys + infra)
+          - stage: Validate_${{ env.environmentCode }}
+            displayName: Validate deployments (${{ env.name }})
+            dependsOn:
+              - Detect
+              - Deploy_${{ env.environmentCode }}_Infra
+              - ${{ each application in parameters.applications }}:
+                  - Deploy_${{ env.environmentCode }}_${{ replace(replace(lower(application.name), '-', '_'), ' ', '_') }}
+            condition: |
+              and(
+                not(failed()),
+                not(canceled()),
+                eq(dependencies.Detect.outputs['DetectChanges.SetFlags.anyDeployOrForce'], 'true')
+              )
+            jobs:
+              - job: Validate
+                displayName: Post-deploy validation (${{ env.name }})
+                pool:
+                  vmImage: ubuntu-latest
+                steps:
+                  - script: echo 'Add validation steps via postDeployValidationSteps.'
+                    displayName: Placeholder
+                  - ${{ parameters.postDeployValidationSteps }}
+
+          # Slot swap per environment (after validation)
+          - ${{ if eq(env.hasDeploymentSlots, true) }}:
+              - stage: SlotSwap_${{ env.environmentCode }}
+                displayName: Slot swap (all apps → ${{ env.name }})
+                dependsOn:
+                  - Detect
+                  - Validate_${{ env.environmentCode }}
+                condition: |
+                  and(
+                    succeeded(),
+                    eq(dependencies.Detect.outputs['DetectChanges.SetFlags.anyDeployOrForce'], 'true')
+                  )
+                jobs:
+                  - template: ./swap-application-jobs.yml
+                    parameters:
+                      applications: ${{ parameters.applications }}
+                      environment: ${{ env }}

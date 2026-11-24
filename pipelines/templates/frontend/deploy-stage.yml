@@ -1,0 +1,46 @@
+parameters:
+  - name: environment
+    type: object
+  - name: application
+    type: object
+  - name: component
+    type: object
+    default: {}
+
+steps:
+  - download: current
+    artifact: ${{ parameters.application.name }}-${{ parameters.component.name }}
+
+  # Replaces the default config.js with the environment-specific version
+  # (e.g. configs/config.dev.js -> config.js) inside the built package folder.
+  - task: PowerShell@2
+    displayName: 'Use ${{ parameters.environment.name }} config'
+    inputs:
+      targetType: inline
+      script: |
+        $packagePath = "$(Pipeline.Workspace)/${{ parameters.application.name }}-${{ parameters.component.name }}/${{ parameters.component.config.packageName }}"
+        $configSource = "$packagePath/configs/config.${{ lower(parameters.environment.environmentCode) }}.js"
+        $configDest = "$packagePath/config.js"
+        if (Test-Path $configSource) {
+          Copy-Item -Path $configSource -Destination $configDest -Force
+          Write-Host "Applied config: $configSource"
+        } else {
+          Write-Host "No environment config found at $configSource; skipping config copy."
+        }
+
+  - task: AzureRmWebAppDeployment@4
+    displayName: 'Deploy Frontend'
+    inputs:
+      ConnectionType: 'AzureRM'
+      azureSubscription: '${{ parameters.environment.serviceConnection }}'
+      ${{ if ne(coalesce(parameters.component.config.resourceNameOverride, ''), '') }}:
+        WebAppName: ${{ replace(parameters.component.config.resourceNameOverride, '{environmentCode}', parameters.environment.environmentCode) }}
+      ${{ else }}:
+        WebAppName: ${{ parameters.application.name }}-${{ lower(parameters.environment.environmentCode) }}-${{ parameters.component.name }}
+      package: '$(Pipeline.Workspace)/${{ parameters.application.name }}-${{ parameters.component.name }}/${{ parameters.component.config.packageName }}'
+      ResourceGroupName: '${{ parameters.environment.resourceGroupName }}'
+      ${{ if eq(parameters.environment.hasDeploymentSlots, true) }}:
+        DeployToSlotOrASEFlag: true
+        SlotName: staging
+      ${{ if ne(parameters.environment.hasDeploymentSlots, true) }}:
+        DeployToSlotOrASEFlag: false

@@ -1,0 +1,83 @@
+parameters:
+  - name: component
+    type: object
+    default: {}
+
+  - name: applicationName
+    type: string
+
+  - name: scriptsDirectory
+    type: string
+
+steps:
+  - task: UseDotNet@2
+    displayName: Use .NET Core
+    inputs:
+      packageType: 'sdk'
+      version: '${{ parameters.component.config.dotnetVersion }}'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Restore solution'
+    inputs:
+      command: 'restore'
+      projects: '${{ parameters.component.config.solution }}'
+      feedsToUse: 'config'
+      nugetConfigPath: '${{ parameters.component.config.directoryPath }}/nuget.config'
+      workingDirectory: '${{ parameters.component.config.directoryPath }}'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Publish solution'
+    inputs:
+      command: 'publish'
+      projects: '${{ parameters.component.config.publishProject }}'
+      arguments: '--no-restore --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release /nr:false'
+      publishWebProjects: false
+      zipAfterPublish: false
+      modifyOutputPath: false
+      workingDirectory: '${{ parameters.component.config.directoryPath }}'
+
+  - ${{ if eq(parameters.component.config.runTests, true) }}:
+    - task: DotNetCoreCLI@2
+      displayName: 'Build test project'
+      inputs:
+        command: 'build'
+        projects: '${{ parameters.component.config.testPath }}/**/*.csproj'
+        arguments: '--configuration Release'
+        workingDirectory: '${{ parameters.component.config.testPath }}'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Run Tests'
+      inputs:
+        command: test
+        projects: '${{ parameters.component.config.testPath }}/**/*.csproj'
+        publishTestResults: true
+        nobuild: true
+        arguments: '--configuration Release  --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura,opencover'
+        workingDirectory: '${{ parameters.component.config.testPath }}'
+
+    - task: reportgenerator@5
+      displayName: 'Merge code coverage reports'
+      inputs:
+        reports: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+        targetdir: '$(Build.SourcesDirectory)/CodeCoverage'
+        reporttypes: 'Cobertura;HtmlInline_AzurePipelines_Dark'
+        verbosity: 'Verbose'
+
+    - task: PublishCodeCoverageResults@2
+      displayName: 'Publish Code Coverage Results'
+      inputs:
+        summaryFileLocation: '$(Build.SourcesDirectory)/CodeCoverage/Cobertura.xml'
+
+  - ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    - task: ArchiveFiles@2
+      displayName: 'Archive solution'
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/${{ parameters.component.config.packageName }}.zip
+        replaceExistingArchive: true
+
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: ${{ parameters.applicationName }}-${{ parameters.component.name }}
+      displayName: 'Publish Artifacts'

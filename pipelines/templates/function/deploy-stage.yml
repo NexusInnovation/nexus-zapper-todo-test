@@ -1,0 +1,24 @@
+parameters:
+  - name: environment
+    type: object
+  - name: application
+    type: object
+  - name: component
+    type: object
+    default: {}
+
+steps:
+  - download: current
+    artifact: ${{ parameters.application.name }}-${{ parameters.component.name }}
+
+  - task: AzureFunctionApp@2
+    displayName: 'Deploy Function App'
+    inputs:
+      azureSubscription: '${{ parameters.environment.serviceConnection }}'
+      appType: functionAppLinux
+      ${{ if ne(coalesce(parameters.component.config.resourceNameOverride, ''), '') }}:
+        appName: ${{ replace(parameters.component.config.resourceNameOverride, '{environmentCode}', parameters.environment.environmentCode) }}
+      ${{ else }}:
+        appName: ${{ parameters.application.name }}-${{ lower(parameters.environment.environmentCode) }}-${{ parameters.component.name }}
+      package: '$(Pipeline.Workspace)/${{ parameters.application.name }}-${{ parameters.component.name }}/${{ parameters.component.config.packageName }}.zip'
+      deploymentMethod: zipDeploy

@@ -1,0 +1,47 @@
+parameters:
+  - name: infrastructureDirectory
+    type: string
+    default: '$(Build.SourcesDirectory)/infra'
+
+  - name: location
+    type: string
+    default: 'canadaeast'
+
+  - name: serviceConnection
+    type: string
+
+  - name: environmentCode
+    type: string
+
+steps:
+  - checkout: self
+
+  - script: az bicep build --file Environment/main.entrypoint.bicep
+    displayName: 'Compile & lint Bicep'
+    workingDirectory: ${{ parameters.infrastructureDirectory }}
+
+  - task: AzureCLI@2
+    displayName: 'Validate Bicep (ARM)'
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptType: pscore
+      scriptLocation: inlineScript
+      workingDirectory: ${{ parameters.infrastructureDirectory }}
+      inlineScript: |
+        az deployment sub validate `
+          --location ${{ parameters.location }} `
+          --template-file Environment/main.entrypoint.bicep `
+          --parameters ./Environment/main.${{ parameters.environmentCode }}.bicepparam
+
+  - task: CopyFiles@2
+    displayName: 'Copy Infra Files to Artifacts Directory'
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+      SourceFolder: ${{ parameters.infrastructureDirectory }}
+      Contents: '**'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+  - publish: $(Build.ArtifactStagingDirectory)
+    artifact: 'Infra'
+    displayName: 'Publish Artifacts'
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))

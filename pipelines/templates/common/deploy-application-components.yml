@@ -1,0 +1,29 @@
+parameters:
+  - name: application
+    type: object
+
+  - name: environment
+    type: object
+
+jobs:
+  - ${{ each component in parameters.application.components }}:
+      - ${{ if ne(coalesce(component.deployTemplate, ''), '') }}:
+          - deployment: Deploy_${{ replace(replace(lower(parameters.application.name), '-', '_'), ' ', '_') }}_${{ replace(replace(lower(component.name), '-', '_'), ' ', '_') }}
+            displayName: Deploy ${{ component.name }} (${{ parameters.application.name }}) - ${{ parameters.environment.name }}
+            pool:
+              vmImage: ubuntu-latest
+            environment: ${{ parameters.environment.name }}
+            condition: |
+              and(
+                succeeded(),
+                eq(stageDependencies.Detect.DetectChanges.outputs['SetFlags.app_${{ replace(replace(lower(parameters.application.name), '-', '_'), ' ', '_') }}_comp_${{ replace(replace(lower(component.name), '-', '_'), ' ', '_') }}_shouldProcess'], 'true')
+              )
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    - template: ${{ component.deployTemplate }}
+                      parameters:
+                        environment: ${{ parameters.environment }}
+                        application: ${{ parameters.application }}
+                        component: ${{ component }}

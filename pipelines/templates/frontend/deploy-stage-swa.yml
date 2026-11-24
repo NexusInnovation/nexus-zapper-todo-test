@@ -1,0 +1,86 @@
+parameters:
+  - name: environment
+    type: object
+  - name: application
+    type: object
+  - name: component
+    type: object
+    default: {}
+
+steps:
+  - download: current
+    artifact: ${{ parameters.application.name }}-${{ parameters.component.name }}
+
+  # Replaces the default config.js with the environment-specific version
+  # (e.g. configs/config.dev.js -> config.js) inside the built package folder.
+  - task: PowerShell@2
+    displayName: 'Use ${{ parameters.environment.name }} config'
+    inputs:
+      targetType: inline
+      script: |
+        $packagePath = "$(Pipeline.Workspace)/${{ parameters.application.name }}-${{ parameters.component.name }}/${{ parameters.component.config.packageName }}"
+        $configSource = "$packagePath/configs/config.${{ lower(parameters.environment.environmentCode) }}.js"
+        $configDest = "$packagePath/config.js"
+        if (Test-Path $configSource) {
+          Copy-Item -Path $configSource -Destination $configDest -Force
+          Write-Host "Applied config: $configSource"
+        } else {
+          Write-Host "No environment config found at $configSource; skipping config copy."
+        }
+
+  # Resolves the Static Web App resource name from the override or a conventional default,
+  # and stores it as a pipeline variable.
+  - ${{ if ne(coalesce(parameters.component.config.resourceNameOverride, ''), '') }}:
+    - bash: echo "##vso[task.setvariable variable=staticWebAppName]${{ replace(parameters.component.config.resourceNameOverride, '{environmentCode}', parameters.environment.environmentCode) }}"
+      displayName: 'Set Static Web App name'
+  - ${{ else }}:
+    - bash: echo "##vso[task.setvariable variable=staticWebAppName]${{ parameters.application.name }}-${{ lower(parameters.environment.environmentCode) }}-${{ parameters.component.name }}"
+      displayName: 'Set Static Web App name'
+
+  # Retrieves the Static Web App default hostname. Stores it as a pipeline variable for use in later steps.
+  - task: AzureCLI@2
+    displayName: 'Retrieve Static Web App hostname'
+    inputs:
+      azureSubscription: '${{ parameters.environment.serviceConnection }}'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        $name = "$(staticWebAppName)".ToLower()
+        $staticWebAppUrl = az staticwebapp show --name $name --query "defaultHostname" --output tsv
+        $url = 'https://' + $staticWebAppUrl
+        Write-Host "##vso[task.setvariable variable=staticWebAppUrl]$url"
+
+  # Rewrites the MSAL redirect URI in config.js to point to the deployed SWA URL.
+  - task: PowerShell@2
+    displayName: 'Update config redirect URI'
+    inputs:
+      targetType: inline
+      script: |
+        $packagePath = "$(Pipeline.Workspace)/${{ parameters.application.name }}-${{ parameters.component.name }}/${{ parameters.component.config.packageName }}"
+        $configPath = "$packagePath/config.js"
+        $redirectUri = "$(staticWebAppUrl)"
+        (Get-Content $configPath) -replace "MSAL_REDIRECT_URI: 'http://localhost:3000/'", "MSAL_REDIRECT_URI: '$redirectUri'" | Set-Content $configPath
+        Get-Content $configPath
+
+  # Retrieves the Static Web App deployment API token from the Azure resource.
+  - task: AzureCLI@2
+    displayName: 'Retrieve Static Web App API token'
+    name: RetrieveToken
+    inputs:
+      azureSubscription: '${{ parameters.environment.serviceConnection }}'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        $token = az staticwebapp secrets list --name "$(staticWebAppName)".ToLower() --query "properties.apiKey" --output tsv
+        echo "##vso[task.setvariable variable=staticWebAppApiToken;isOutput=true;issecret=true]$token"
+
+  # Deploys the built frontend package to the Static Web App.
+  - task: PowerShell@2
+    displayName: 'Deploy Static Web App'
+    inputs:
+      targetType: inline
+      script: |
+        npx --yes @azure/static-web-apps-cli deploy `
+          -d $(RetrieveToken.staticWebAppApiToken) `
+          -a "$(Pipeline.Workspace)/${{ parameters.application.name }}-${{ parameters.component.name }}/${{ parameters.component.config.packageName }}" `
+          --env production

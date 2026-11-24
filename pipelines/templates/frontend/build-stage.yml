@@ -1,0 +1,73 @@
+parameters:
+  - name: component
+    type: object
+    default: {}
+
+  - name: applicationName
+    type: string
+
+  - name: scriptsDirectory
+    type: string
+
+steps:
+  - task: PowerShell@2
+    displayName: 'Resolve Node.js version'
+    inputs:
+      targetType: filePath
+      filePath: ${{ parameters.scriptsDirectory }}/Resolve-NodeVersion.ps1
+      arguments: >-
+        -DirectoryPath '${{ parameters.component.config.directoryPath }}'
+        -NodeVersion '${{ parameters.component.config.nodeVersion }}'
+      pwsh: true
+
+  - task: UseNode@1
+    displayName: 'Install Node.js'
+    inputs:
+      version: '$(resolvedNodeVersion)'
+
+  - task: Cache@2
+    displayName: Cache node_modules
+    inputs:
+      key: 'npm | "$(Agent.OS)" | "$(resolvedNodeVersion)" | ${{ parameters.component.config.directoryPath }}/package-lock.json'
+      path: ${{ parameters.component.config.directoryPath }}/node_modules
+      cacheHitVar: CACHE_RESTORED
+
+  - ${{ if ne(coalesce(parameters.component.config.npmrcPath, ''), '') }}:
+    - task: npmAuthenticate@0
+      displayName: 'Authenticate npm'
+      inputs:
+        workingFile: '${{ parameters.component.config.npmrcPath }}'
+
+  - task: Npm@1
+    displayName: 'Install the dependencies'
+    condition: ne(variables.CACHE_RESTORED, 'true')
+    inputs:
+      command: custom
+      verbose: false
+      customCommand: 'ci'
+      workingDir: '${{ parameters.component.config.directoryPath }}/'
+
+  - script: npm run lint
+    displayName: 'Lint'
+    workingDirectory: ${{ parameters.component.config.directoryPath }}/
+
+  - ${{ if eq(parameters.component.config.runTests, true) }}:
+    - script: npm run test
+      displayName: 'Unit Tests'
+      workingDirectory: ${{ parameters.component.config.directoryPath }}/
+
+  - script: npm run build
+    displayName: 'Build'
+    workingDirectory: ${{ parameters.component.config.directoryPath }}/
+
+  - ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    - task: CopyFiles@2
+      displayName: 'Copy Frontend Files to Artifacts Directory'
+      inputs:
+        SourceFolder: ${{ parameters.component.config.directoryPath }}/dist/
+        Contents: '**/*'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/${{ parameters.component.config.packageName }}'
+
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: '${{ parameters.applicationName }}-${{ parameters.component.name }}'
+      displayName: 'Publish Artifacts'

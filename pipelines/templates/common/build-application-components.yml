@@ -1,0 +1,26 @@
+parameters:
+  - name: application
+    type: object
+  - name: scriptsDirectory
+    type: string
+
+jobs:
+  - ${{ each component in parameters.application.components }}:
+      - job: Build_${{ replace(replace(lower(parameters.application.name), '-', '_'), ' ', '_') }}_${{ replace(replace(lower(component.name), '-', '_'), ' ', '_') }}
+        displayName: Build ${{ component.name }} (${{ parameters.application.name }})
+        pool:
+          vmImage: ubuntu-latest
+        condition: |
+          and(
+            not(canceled()),
+            eq(stageDependencies.Detect.DetectChanges.outputs['SetFlags.app_${{ replace(replace(lower(parameters.application.name), '-', '_'), ' ', '_') }}_comp_${{ replace(replace(lower(component.name), '-', '_'), ' ', '_') }}_shouldProcess'], 'true')
+          )
+        steps:
+          - checkout: self
+            submodules: true
+
+          - template: ${{ component.buildTemplate }}
+            parameters:
+              component: ${{ component }}
+              applicationName: ${{ parameters.application.name }}
+              scriptsDirectory: ${{ parameters.scriptsDirectory }}

@@ -1,0 +1,111 @@
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+parameters:
+  # TODO: the infra/ folder does not exist yet; scaffold it (bicep-nexus) before the first run,
+  # because any change under infra/ or pipelines/templates/infra/ triggers the infra build.
+  - name: infrastructureDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)/infra"
+
+  - name: infrastructureFilters
+    type: object
+    default:
+      - "infra/"
+      - "pipelines/templates/infra/"
+
+  - name: pipelineFilters
+    type: object
+    default:
+      - "infra/"
+      - "pipelines/"
+
+  - name: location
+    type: string
+    default: "canadacentral"
+
+  - name: scriptsDirectory
+    type: string
+    default: "pipelines/scripts"
+
+  - name: forceInfra
+    type: boolean
+    default: false
+
+  - name: environments
+    type: object
+    default:
+      - name: "Dev"
+        environmentCode: "dev"
+        resourceGroupName: "rg-nexus-zapper-todo-dev"
+        serviceConnection: "sc-nexus-zapper-todo-dev"
+        hasDeploymentSlots: false
+
+      - name: "Uat"
+        environmentCode: "uat"
+        resourceGroupName: "rg-nexus-zapper-todo-uat"
+        serviceConnection: "sc-nexus-zapper-todo-uat"
+        hasDeploymentSlots: false
+
+      - name: "Prod"
+        environmentCode: "prod"
+        resourceGroupName: "rg-nexus-zapper-todo-prod"
+        serviceConnection: "sc-nexus-zapper-todo-prod"
+        hasDeploymentSlots: false
+
+  - name: applications
+    type: object
+    default:
+      - name: "nexus-zapper-todo"
+        forceBuildAndDeploy: false
+        components:
+          - name: "backend"
+            buildTemplate: "../backend/build-stage.yml"
+            deployTemplate: "../backend/deploy-stage.yml"
+            config:
+              dotnetVersion: "10.0.x"
+              solution: "src/backend/Nexus.ZapperTodo.slnx"
+              publishProject: "src/backend/Nexus.ZapperTodo.Api/Nexus.ZapperTodo.Api.csproj"
+              directoryPath: "$(Build.SourcesDirectory)/src/backend"
+              runTests: true
+              testPath: "$(Build.SourcesDirectory)/src/backend/tests"
+              packageName: "Backend"
+            componentFilters:
+              - "src/backend/"
+
+          - name: "frontend"
+            # Project-owned pnpm variant of ../frontend/build-stage.yml (which uses npm ci).
+            buildTemplate: "../custom/frontend-build-stage-pnpm.yml"
+            deployTemplate: "../frontend/deploy-stage-swa.yml"
+            config:
+              directoryPath: "$(Build.SourcesDirectory)/src/frontend"
+              pnpmVersion: "12.8.1"
+              runTests: true
+              testScript: "test:run"
+              packageName: "Frontend"
+            componentFilters:
+              - "src/frontend/"
+
+        applicationFilters:
+          - "src/"
+
+stages:
+  - template: ./templates/common/pipeline.yml
+    parameters:
+      applications: ${{ parameters.applications }}
+      environments: ${{ parameters.environments }}
+      infrastructureDirectory: ${{ parameters.infrastructureDirectory }}
+      infrastructureFilters: ${{ parameters.infrastructureFilters }}
+      pipelineFilters: ${{ parameters.pipelineFilters }}
+      location: ${{ parameters.location }}
+      scriptsDirectory: ${{ parameters.scriptsDirectory }}
+      forceInfra: ${{ parameters.forceInfra }}

@@ -1,0 +1,29 @@
+parameters:
+  - name: environment
+    type: object
+  - name: application
+    type: object
+  - name: component
+    type: object
+    default: {}
+
+steps:
+  - download: current
+    artifact: ${{ parameters.application.name }}-${{ parameters.component.name }}
+
+  - task: AzureRmWebAppDeployment@4
+    displayName: 'Deploy Backend'
+    inputs:
+      ConnectionType: 'AzureRM'
+      azureSubscription: '${{ parameters.environment.serviceConnection }}'
+      ${{ if ne(coalesce(parameters.component.config.resourceNameOverride, ''), '') }}:
+        WebAppName: ${{ replace(parameters.component.config.resourceNameOverride, '{environmentCode}', parameters.environment.environmentCode) }}
+      ${{ else }}:
+        WebAppName: ${{ parameters.application.name }}-${{ lower(parameters.environment.environmentCode) }}-${{ parameters.component.name }}
+      package: '$(Pipeline.Workspace)/${{ parameters.application.name }}-${{ parameters.component.name }}/${{ parameters.component.config.packageName }}.zip'
+      ResourceGroupName: '${{ parameters.environment.resourceGroupName }}'
+      ${{ if eq(parameters.environment.hasDeploymentSlots, true) }}:
+        DeployToSlotOrASEFlag: true
+        SlotName: staging
+      ${{ if ne(parameters.environment.hasDeploymentSlots, true) }}:
+        DeployToSlotOrASEFlag: false

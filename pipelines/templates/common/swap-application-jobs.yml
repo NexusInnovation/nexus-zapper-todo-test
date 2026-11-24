@@ -1,0 +1,26 @@
+parameters:
+  - name: applications
+    type: object
+
+  - name: environment
+    type: object
+
+jobs:
+  - ${{ each application in parameters.applications }}:
+      - ${{ each component in application.components }}:
+          - ${{ if and(ne(coalesce(component.deployTemplate, ''), ''), eq(component.config.hasDeploymentSlots, true)) }}:
+              - job: SlotSwap_${{ replace(replace(lower(application.name), '-', '_'), ' ', '_') }}_${{ replace(replace(lower(component.name), '-', '_'), ' ', '_') }}
+                displayName: Slot swap ${{ component.name }} (${{ application.name }} / ${{ parameters.environment.name }})
+                pool:
+                  vmImage: ubuntu-latest
+                condition: |
+                  and(
+                    succeeded(),
+                    eq(stageDependencies.Detect.DetectChanges.outputs['SetFlags.app_${{ replace(replace(lower(application.name), '-', '_'), ' ', '_') }}_comp_${{ replace(replace(lower(component.name), '-', '_'), ' ', '_') }}_shouldProcess'], 'true')
+                  )
+                steps:
+                  - template: ./slot-swap-job.yml
+                    parameters:
+                      environment: ${{ parameters.environment }}
+                      application: ${{ application }}
+                      component: ${{ component }}
