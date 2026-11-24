@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch API",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-backend",
+      "program": "${workspaceFolder}/src/backend/Nexus.ZapperTodo.Api/bin/Debug/net10.0/Nexus.ZapperTodo.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/backend/Nexus.ZapperTodo.Api",
+      "stopAtEntry": false,
+      "launchSettingsFilePath": "${workspaceFolder}/src/backend/Nexus.ZapperTodo.Api/Properties/launchSettings.json",
+      "launchSettingsProfile": "https",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": "Launch Frontend (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "start-frontend",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/src/frontend",
+      "sourceMapPathOverrides": {
+        "/@fs/*": "/*"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack",
+      "configurations": ["Launch API", "Launch Frontend (Chrome)"],
+      "stopAll": true
+    }
+  ]
+}
