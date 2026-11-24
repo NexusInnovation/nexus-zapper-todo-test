@@ -4,3 +4,4 @@ obj/
 
 # BDD run results
 .zapper/behaviour-driven-development/results/
+.zapper/regression-baseline/results/

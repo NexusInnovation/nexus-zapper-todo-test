@@ -15,7 +15,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "bdd": "bddgen && playwright test"
+    "bdd": "bddgen && playwright test",
+    "regression": "node scripts/run-regression.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

@@ -10,6 +10,7 @@ export default defineConfig([
     'dist',
     'coverage',
     '.features-gen',
+    '.features-gen-regression',
     'test-results',
     'playwright-report',
   ]),
@@ -33,6 +34,7 @@ export default defineConfig([
       'vitest.config.ts',
       'eslint.config.ts',
       'playwright.config.ts',
+      'playwright.regression.config.ts',
       'e2e/**/*.ts',
     ],
     languageOptions: {

@@ -29,5 +29,6 @@ coverage
 
 # BDD suite (playwright-bdd)
 .features-gen/
+.features-gen-regression/
 test-results/
 playwright-report/

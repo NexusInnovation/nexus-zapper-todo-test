@@ -4,5 +4,6 @@ node_modules
 .husky
 pnpm-lock.yaml
 .features-gen
+.features-gen-regression
 test-results
 playwright-report
