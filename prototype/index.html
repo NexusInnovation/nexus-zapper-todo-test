@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Todos — prototype</title>
+    <style>
+      :root {
+        font-family: system-ui, sans-serif;
+        color: #1f2937;
+        background: #f3f4f6;
+      }
+      body {
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        padding: 3rem 1rem;
+      }
+      main {
+        width: 100%;
+        max-width: 32rem;
+        background: #fff;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 1.5rem;
+      }
+      form {
+        display: flex;
+        gap: 0.5rem;
+      }
+      input[type="text"] {
+        flex: 1;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font: inherit;
+      }
+      button {
+        padding: 0.5rem 0.75rem;
+        border: 0;
+        border-radius: 0.375rem;
+        font: inherit;
+        cursor: pointer;
+        background: #2563eb;
+        color: #fff;
+      }
+      button.secondary {
+        background: #e5e7eb;
+        color: #1f2937;
+      }
+      button.danger {
+        background: #dc2626;
+      }
+      .error {
+        color: #dc2626;
+        font-size: 0.875rem;
+        min-height: 1.25rem;
+        margin: 0.25rem 0 0.75rem;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f3f4f6;
+      }
+      li .title {
+        flex: 1;
+        word-break: break-word;
+      }
+      li.done .title {
+        text-decoration: line-through;
+        color: #9ca3af;
+      }
+      .empty {
+        color: #6b7280;
+        text-align: center;
+        padding: 1rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Mes Todos</h1>
+      <form id="add-form">
+        <input
+          id="add-title"
+          type="text"
+          placeholder="Nouveau Todo…"
+          aria-label="Titre du Todo"
+        />
+        <button type="submit">Ajouter</button>
+      </form>
+      <p id="add-error" class="error" role="alert"></p>
+      <ul id="list"></ul>
+      <p id="empty" class="empty">Aucun Todo pour l'instant.</p>
+    </main>
+
+    <script>
+      "use strict";
+      const STORAGE_KEY = "zapper-todos";
+
+      function load() {
+        try {
+          const data = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
+          return Array.isArray(data) ? data : [];
+        } catch {
+          return [];
+        }
+      }
+
+      let todos = load();
+      let editingId = null;
+
+      const save = () =>
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+      const normalize = (title) => (title ?? "").trim();
+      const find = (id) => todos.find((t) => t.id === id);
+
+      function createTodo(title) {
+        const clean = normalize(title);
+        if (!clean) throw new Error("Le titre est obligatoire.");
+        const todo = { id: crypto.randomUUID(), title: clean, done: false };
+        todos.push(todo);
+        save();
+        return todo;
+      }
+
+      function updateTodo(id, changes) {
+        const todo = find(id);
+        if (!todo) throw new Error("Todo introuvable.");
+        if ("title" in changes) {
+          const clean = normalize(changes.title);
+          if (!clean) throw new Error("Le titre est obligatoire.");
+          todo.title = clean;
+        }
+        if ("done" in changes) todo.done = Boolean(changes.done);
+        save();
+      }
+
+      function deleteTodo(id) {
+        const index = todos.findIndex((t) => t.id === id);
+        if (index === -1) throw new Error("Todo introuvable.");
+        todos.splice(index, 1);
+        save();
+      }
+
+      const list = document.getElementById("list");
+      const empty = document.getElementById("empty");
+      const addForm = document.getElementById("add-form");
+      const addTitle = document.getElementById("add-title");
+      const addError = document.getElementById("add-error");
+
+      function button(label, className, onClick) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = label;
+        if (className) b.className = className;
+        b.addEventListener("click", onClick);
+        return b;
+      }
+
+      function renderEditor(li, todo) {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = todo.title;
+        input.setAttribute("aria-label", "Modifier le titre");
+        const commit = () => {
+          try {
+            updateTodo(todo.id, { title: input.value });
+            editingId = null;
+            render();
+          } catch (e) {
+            input.setCustomValidity(e.message);
+            input.reportValidity();
+          }
+        };
+        input.addEventListener("input", () => input.setCustomValidity(""));
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") {
+            editingId = null;
+            render();
+          }
+        });
+        li.append(
+          input,
+          button("Enregistrer", "", commit),
+          button("Annuler", "secondary", () => {
+            editingId = null;
+            render();
+          }),
+        );
+        queueMicrotask(() => input.focus());
+      }
+
+      function render() {
+        list.replaceChildren();
+        empty.hidden = todos.length > 0;
+        for (const todo of todos) {
+          const li = document.createElement("li");
+          li.dataset.id = todo.id;
+          li.classList.toggle("done", todo.done);
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = todo.done;
+          checkbox.setAttribute("aria-label", "Fait");
+          checkbox.addEventListener("change", () => {
+            updateTodo(todo.id, { done: checkbox.checked });
+            render();
+          });
+          li.append(checkbox);
+
+          if (editingId === todo.id) {
+            renderEditor(li, todo);
+          } else {
+            const title = document.createElement("span");
+            title.className = "title";
+            title.textContent = todo.title;
+            title.addEventListener("dblclick", () => {
+              editingId = todo.id;
+              render();
+            });
+            li.append(
+              title,
+              button("Modifier", "secondary", () => {
+                editingId = todo.id;
+                render();
+              }),
+              button("Supprimer", "danger", () => {
+                if (confirm(`Supprimer « ${todo.title} » ?`)) {
+                  deleteTodo(todo.id);
+                  render();
+                }
+              }),
+            );
+          }
+          list.append(li);
+        }
+      }
+
+      addForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        try {
+          createTodo(addTitle.value);
+          addTitle.value = "";
+          addError.textContent = "";
+          render();
+        } catch (err) {
+          addError.textContent = err.message;
+        }
+        addTitle.focus();
+      });
+
+      render();
+    </script>
+  </body>
+</html>
