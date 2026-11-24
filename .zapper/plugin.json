@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "zapper",
+  "version": "0.1.0",
+  "description": "Project-agnostic, AI-driven code generation stages for GitHub Copilot CLI",
+  "author": {
+    "name": "Nexus Innovation"
+  },
+  "keywords": [
+    "code-generation",
+    "copilot-cli",
+    "development"
+  ]
+}

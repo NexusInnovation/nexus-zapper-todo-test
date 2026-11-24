@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "hooks": {
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "command": "node -e \"const p=require('path'),f=require('fs');let d=process.cwd(),s;for(;;){s=p.join(d,'.zapper','scripts','goal-gate.mjs');if(f.existsSync(s))break;if(p.dirname(d)===d)process.exit(0);d=p.dirname(d)}process.exit(require('child_process').spawnSync(process.execPath,[s,process.argv[1]],{stdio:'inherit'}).status??1)\" mark",
+        "timeoutSec": 10
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "command": "node -e \"const p=require('path'),f=require('fs');let d=process.cwd(),s;for(;;){s=p.join(d,'.zapper','scripts','goal-gate.mjs');if(f.existsSync(s))break;if(p.dirname(d)===d)process.exit(0);d=p.dirname(d)}process.exit(require('child_process').spawnSync(process.execPath,[s,process.argv[1]],{stdio:'inherit'}).status??1)\" check",
+        "timeoutSec": 10
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "command": "node -e \"const p=require('path'),f=require('fs');let d=process.cwd(),s;for(;;){s=p.join(d,'.zapper','scripts','goal-gate.mjs');if(f.existsSync(s))break;if(p.dirname(d)===d)process.exit(0);d=p.dirname(d)}process.exit(require('child_process').spawnSync(process.execPath,[s,process.argv[1]],{stdio:'inherit'}).status??1)\" clear",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}
