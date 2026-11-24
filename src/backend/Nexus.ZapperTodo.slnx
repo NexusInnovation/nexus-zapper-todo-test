@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/Nexus.ZapperTodo.UnitTests/Nexus.ZapperTodo.UnitTests.csproj" />
+  </Folder>
+  <Project Path="Nexus.ZapperTodo.Api/Nexus.ZapperTodo.Api.csproj" />
+  <Project Path="Nexus.ZapperTodo.Application/Nexus.ZapperTodo.Application.csproj" />
+  <Project Path="Nexus.ZapperTodo.Database/Nexus.ZapperTodo.Database.sqlproj" Type="42ea0dbd-9cf1-443e-919e-be9c484e4577" />
+  <Project Path="Nexus.ZapperTodo.Domain/Nexus.ZapperTodo.Domain.csproj" />
+  <Project Path="Nexus.ZapperTodo.Infrastructure/Nexus.ZapperTodo.Infrastructure.csproj" />
+  <File Path=".editorconfig" />
+</Solution>
