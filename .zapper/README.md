@@ -149,8 +149,7 @@ choices, the infrastructure the run needs, and the scope (screens, routes and mo
 approving the plan is the human approval of those decisions, and the run asks for none. The
 `goal-gate` hook (`com.github.copilot/hooks/hooks.json`, `scripts/goal-gate.mjs`, Node) enforces it:
 once a session launches `/goal ... .zapper/goal.md`, it denies every tool except the read-only ones
-until the configuration, the refined input, the BDD suite, the regression baseline (`baseline:
-passed`) and the plan are `status: approved` and no plan decision is `proposed`. Run it from the
+until the configuration, the refined input, the BDD suite, the regression baseline (`baseline: passed`) and the plan are `status: approved` and no plan decision is `proposed`. Run it from the
 repository root, which is where Copilot CLI starts with `--plugin-dir .zapper`. The hook receives
 either the typed `/goal ...` prompt or the CLI's autopilot rewrite of it ("...explicit autopilot
 objective with /autopilot: ... .zapper/goal.md"); it gates both. Its tests:

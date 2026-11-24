@@ -45,10 +45,10 @@ performance-dataset:
   kind: "volume-seeder"
   volumes:
     - "todo items: 100 000 rows"
-  load-command: "written by the plan's runner block, run by runner.setup after the schema deployment"
+  load-command: "pnpm --dir src/frontend seed:volume" # written by the todo-api block; run by runner.setup after the schema deployment
 runner:
   azure:
-    subscription: "<subscription ID or name of the runner>"
+    subscription: "92e93529-faf4-45ba-9496-775973670750"
     resource-group: "rg-zapper-todo-runner"
     location: "canadaeast"
     name-prefix: "zaptodo"
