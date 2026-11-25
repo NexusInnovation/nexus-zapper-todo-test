@@ -6,12 +6,19 @@ using Nexus.ZapperTodo.Domain.Repositories;
 
 namespace Nexus.ZapperTodo.Infrastructure.Data;
 
-public class TodoRepository(
-    DapperConnectionFactory connectionFactory,
-    IAuthenticatedUserService authenticatedUserService,
-    TimeProvider timeProvider)
-    : DapperRepository<Todo>(connectionFactory, authenticatedUserService, timeProvider), ITodoRepository
+public class TodoRepository : DapperRepository<Todo>, ITodoRepository
 {
+    private readonly DapperConnectionFactory _connectionFactory;
+
+    public TodoRepository(
+        DapperConnectionFactory connectionFactory,
+        IAuthenticatedUserService authenticatedUserService,
+        TimeProvider timeProvider)
+        : base(connectionFactory, authenticatedUserService, timeProvider)
+    {
+        _connectionFactory = connectionFactory;
+    }
+
     private const string PageSql = """
         SELECT [Id], [CreatedAt], [CreatedBy], [UpdatedAt], [UpdatedBy], [IsDeleted], [DeletedAt], [DeletedBy], [Title], [IsDone]
         FROM [dbo].[Todo]
@@ -27,7 +34,7 @@ public class TodoRepository(
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        using var connection = connectionFactory.CreateConnection();
+        using var connection = _connectionFactory.CreateConnection();
         var command = new CommandDefinition(
             PageSql,
             new { Offset = (page - 1) * pageSize, PageSize = pageSize },
