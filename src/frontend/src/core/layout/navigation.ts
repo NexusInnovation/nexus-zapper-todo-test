@@ -1,7 +1,7 @@
-import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded'
+import ChecklistRoundedIcon from '@mui/icons-material/ChecklistRounded'
 import type { SvgIconComponent } from '@mui/icons-material'
 
-export type ModuleId = never // extended per-module by react-module-list
+export type ModuleId = 'todos' // extended per-module by react-module-list
 
 export type NavigationItem = {
   id: 'dashboard' | ModuleId
@@ -18,11 +18,11 @@ export const appBrand = {
 
 export const navigationItems: NavigationItem[] = [
   {
-    id: 'dashboard',
-    label: 'Dashboard',
-    translationKey: 'navigation.dashboard',
+    id: 'todos',
+    label: 'My Todos',
+    translationKey: 'navigation.todos',
     to: '/',
-    Icon: DashboardRoundedIcon,
+    Icon: ChecklistRoundedIcon,
   },
   // module navigation items are appended here by react-module-list
 ]

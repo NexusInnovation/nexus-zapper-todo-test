@@ -31,6 +31,7 @@ if (app.Environment.IsDevelopment())
     EnsureSqlServerRunning(app.Logger, app.Environment.ContentRootPath);
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors(Nexus.ZapperTodo.Api.ConfigureServices.CorsPolicyName);
 app.MapControllers();
@@ -41,7 +42,9 @@ static void EnsureSqlServerRunning(ILogger logger, string contentRootPath)
 {
     var dir = new DirectoryInfo(contentRootPath);
     while (dir is not null && !File.Exists(Path.Join(dir.FullName, "docker-compose.yml")))
+    {
         dir = dir.Parent;
+    }
 
     if (dir is null)
     {

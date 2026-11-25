@@ -1,6 +1,6 @@
 # Results: Composants partagés de l'interface (RG-03)
 
-Run: 2026-11-24T23:03:20.942Z · Command: `pnpm --dir src/frontend regression`
+Run: 2026-11-25T04:07:34Z · Command: `pnpm --dir src/frontend regression`
 
 | Source | Item | Status |
 | --- | --- | --- |

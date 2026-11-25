@@ -24,7 +24,10 @@ export function LanguageSwitcher() {
   return (
     <>
       <Button
-        aria-label={t('languageSwitcher.ariaLabel')}
+        // TODO(A10): the name contains the visible language code (WCAG 2.5.3, label in name; nfr-accessibility-R01).
+        aria-label={t('languageSwitcher.ariaLabel', {
+          language: i18n.language.toUpperCase(),
+        })}
         aria-controls={open ? 'language-menu' : undefined}
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}

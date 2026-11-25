@@ -1,0 +1,35 @@
+{
+  "list": {
+    "title": "My Todos",
+    "ariaLabel": "Todo list",
+    "empty": "No Todos yet.",
+    "loading": "Loading Todos",
+    "showMore": "Show more",
+    "actions": {
+      "delete": "Delete {{title}}"
+    },
+    "confirmDelete": {
+      "title": "Delete the Todo",
+      "message": "Delete “{{title}}”?",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    }
+  },
+  "create": {
+    "formLabel": "Create a Todo",
+    "titleLabel": "Todo title",
+    "titlePlaceholder": "New Todo…",
+    "submit": "Add"
+  },
+  "item": {
+    "done": "Done: {{title}}",
+    "edit": "Edit",
+    "saveFailed": "Saving failed. The list has been reloaded."
+  },
+  "edit": {
+    "formLabel": "Edit the Todo",
+    "titleLabel": "Edit title",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

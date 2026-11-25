@@ -11,8 +11,9 @@ export const router = createBrowserRouter([
       {
         index: true,
         lazy: async () => {
-          const { DashboardPage } = await import('./pages/DashboardPage')
-          return { Component: DashboardPage }
+          const { TodoListPage } =
+            await import('../modules/todos/TodoListPage/TodoListPage')
+          return { Component: TodoListPage }
         },
       },
       {

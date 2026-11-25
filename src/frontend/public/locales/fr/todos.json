@@ -1,0 +1,35 @@
+{
+  "list": {
+    "title": "Mes Todos",
+    "ariaLabel": "Liste des Todos",
+    "empty": "Aucun Todo pour l'instant.",
+    "loading": "Chargement des Todos",
+    "showMore": "Afficher plus",
+    "actions": {
+      "delete": "Supprimer {{title}}"
+    },
+    "confirmDelete": {
+      "title": "Supprimer le Todo",
+      "message": "Supprimer « {{title}} » ?",
+      "confirm": "Supprimer",
+      "cancel": "Annuler"
+    }
+  },
+  "create": {
+    "formLabel": "Créer un Todo",
+    "titleLabel": "Titre du Todo",
+    "titlePlaceholder": "Nouveau Todo…",
+    "submit": "Ajouter"
+  },
+  "item": {
+    "done": "Fait : {{title}}",
+    "edit": "Modifier",
+    "saveFailed": "L'enregistrement a échoué. La liste a été rechargée."
+  },
+  "edit": {
+    "formLabel": "Modifier le Todo",
+    "titleLabel": "Modifier le titre",
+    "save": "Enregistrer",
+    "cancel": "Annuler"
+  }
+}
