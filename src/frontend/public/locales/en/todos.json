@@ -4,7 +4,16 @@
     "ariaLabel": "Todo list",
     "empty": "No Todos yet.",
     "loading": "Loading Todos",
-    "showMore": "Show more"
+    "showMore": "Show more",
+    "actions": {
+      "delete": "Delete {{title}}"
+    },
+    "confirmDelete": {
+      "title": "Delete the Todo",
+      "message": "Delete “{{title}}”?",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    }
   },
   "create": {
     "formLabel": "Create a Todo",

@@ -2,6 +2,7 @@ import { Box, Button, Checkbox, ListItem, Typography } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { DeleteActionButton } from '@/core/components/atoms/DeleteActionButton/DeleteActionButton'
 import { toApiError } from '@/core/errors/ApiError'
 import { useTodoUpdate, type TodoChange } from '../hooks/useTodoUpdate'
 import type { Todo } from '../types/Todo'
@@ -11,12 +12,14 @@ type TodoListItemProps = {
   todo: Todo
   isEditing: boolean
   onEditingChange: (editing: boolean) => void
+  onDelete: () => void
 }
 
 export function TodoListItem({
   todo,
   isEditing,
   onEditingChange,
+  onDelete,
 }: TodoListItemProps) {
   const { t } = useTranslation('todos')
   const update = useTodoUpdate(todo.id)
@@ -52,6 +55,7 @@ export function TodoListItem({
       divider
       sx={{ gap: 1, alignItems: 'center', px: 1, flexWrap: 'wrap' }}
     >
+      {/* TODO(A06): MUI Checkbox rather than the form-bound Checkbox atom, which needs a react-hook-form context. */}
       <Checkbox
         checked={todo.isDone}
         disabled={update.isPending}
@@ -100,6 +104,11 @@ export function TodoListItem({
             >
               {t('item.edit')}
             </Button>
+            <DeleteActionButton
+              onClick={onDelete}
+              ariaLabel={t('list.actions.delete', { title: todo.title })}
+              disabled={update.isPending}
+            />
           </Box>
         </>
       )}

@@ -9,7 +9,10 @@ import {
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ConfirmDialog } from '@/core/components/molecules/ConfirmDialog/ConfirmDialog'
 import { toApiError } from '@/core/errors/ApiError'
+import { useTodoDelete } from '../hooks/useTodoDelete'
+import type { Todo } from '../types/Todo'
 import { useTodoList } from '../hooks/useTodoList'
 import { TodoCreateForm } from './TodoCreateForm'
 import { TodoListItem } from './TodoListItem'
@@ -20,6 +23,29 @@ export function TodoListPage() {
   const list = useTodoList()
   // One row edits at a time: opening another row cancels the current edit.
   const [editingId, setEditingId] = useState<string | null>(null)
+  // The target outlives `deleteOpen` so the dialog keeps its text while it closes.
+  const [pendingDelete, setPendingDelete] = useState<Todo | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const deleteTodo = useTodoDelete()
+
+  const confirmDelete = async () => {
+    if (!pendingDelete || !deleteOpen) return
+    const { id } = pendingDelete
+    const ids = list.rows.map((todo) => todo.id)
+    const index = ids.indexOf(id)
+    const neighbourId = ids[index + 1] ?? ids[index - 1]
+    let removed = true
+    try {
+      await deleteTodo.mutateAsync(id)
+    } catch (error) {
+      removed = toApiError(error).status === 404
+    }
+    setDeleteOpen(false)
+    if (removed) {
+      // The trigger is gone: move the focus to the neighbour row, or to the creation field.
+      setTimeout(() => focusAfterDelete(neighbourId))
+    }
+  }
 
   return (
     <Box
@@ -54,6 +80,10 @@ export function TodoListPage() {
                 onEditingChange={(editing) =>
                   setEditingId(editing ? todo.id : null)
                 }
+                onDelete={() => {
+                  setPendingDelete(todo)
+                  setDeleteOpen(true)
+                }}
               />
             ))}
           </List>
@@ -71,6 +101,28 @@ export function TodoListPage() {
           </Box>
         )}
       </Box>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title={t('list.confirmDelete.title')}
+        message={t('list.confirmDelete.message', {
+          title: pendingDelete?.title ?? '',
+        })}
+        confirmLabel={t('list.confirmDelete.confirm')}
+        cancelLabel={t('list.confirmDelete.cancel')}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setDeleteOpen(false)}
+        isConfirming={deleteTodo.isPending}
+      />
     </Box>
   )
+}
+
+function focusAfterDelete(neighbourId: string | undefined) {
+  const neighbourDelete = neighbourId
+    ? document.querySelector<HTMLElement>(
+        `[data-todo-id="${neighbourId}"] button[aria-label]`,
+      )
+    : null
+  ;(neighbourDelete ?? document.getElementById('todo-create-title'))?.focus()
 }
