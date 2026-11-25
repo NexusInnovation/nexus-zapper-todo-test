@@ -56,15 +56,20 @@ export function TodoListItem({
       sx={{ gap: 1, alignItems: 'center', px: 1, flexWrap: 'wrap' }}
     >
       {/* TODO(A06): MUI Checkbox rather than the form-bound Checkbox atom, which needs a react-hook-form context. */}
+      {/* TODO(A07): aria-disabled while the request runs, so keyboard focus stays on the checkbox. */}
       <Checkbox
         checked={todo.isDone}
-        disabled={update.isPending}
         onChange={(event) => {
+          if (update.isPending) return
           save({ isDone: event.target.checked }).catch(() => undefined)
         }}
         slotProps={{
-          input: { 'aria-label': t('item.done', { title: todo.title }) },
+          input: {
+            'aria-label': t('item.done', { title: todo.title }),
+            'aria-disabled': update.isPending || undefined,
+          },
         }}
+        sx={update.isPending ? { opacity: 0.38 } : undefined}
       />
       {isEditing ? (
         <TodoTitleEditor

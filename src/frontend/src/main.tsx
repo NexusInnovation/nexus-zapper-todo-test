@@ -5,11 +5,13 @@ import { ErrorBoundary } from './core/components/ErrorBoundary'
 import { ErrorToastProvider } from './core/components/ErrorToastProvider'
 import { AppLocalizationProvider } from './core/providers/AppLocalizationProvider'
 import { QueryProvider } from './core/providers/QueryProvider'
+import { FocusVisibleStyles } from './core/styles/FocusVisibleStyles'
 import './i18n'
 import { router } from './routes/router'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <FocusVisibleStyles />
     <AppLocalizationProvider>
       <ErrorBoundary>
         <ErrorToastProvider>

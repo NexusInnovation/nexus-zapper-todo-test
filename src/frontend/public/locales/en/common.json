@@ -11,7 +11,7 @@
     "profileSubtitle": "Profile"
   },
   "languageSwitcher": {
-    "ariaLabel": "Change language",
+    "ariaLabel": "Change language: {{language}}",
     "languages": {
       "en": "English",
       "fr": "Français"

@@ -2,7 +2,9 @@ import { expect, type Page } from '@playwright/test'
 import { Given, Then, When } from '../fixtures.ts'
 
 const languageSwitcher = (page: Page) =>
-  page.getByRole('button', { name: /^(Change language|Changer de langue)$/ })
+  page.getByRole('button', {
+    name: /^(Change language|Changer de langue) ?: (EN|FR)$/,
+  })
 
 // Navigates inside the running single-page app so the chosen language is kept;
 // a full reload would fall back to the default language.
