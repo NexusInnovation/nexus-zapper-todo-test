@@ -41,7 +41,9 @@ static void EnsureSqlServerRunning(ILogger logger, string contentRootPath)
 {
     var dir = new DirectoryInfo(contentRootPath);
     while (dir is not null && !File.Exists(Path.Join(dir.FullName, "docker-compose.yml")))
+    {
         dir = dir.Parent;
+    }
 
     if (dir is null)
     {

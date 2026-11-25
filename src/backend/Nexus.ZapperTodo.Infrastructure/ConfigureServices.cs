@@ -1,7 +1,9 @@
-﻿using Nexus.ZapperTodo.Domain.Repositories;
-using Nexus.ZapperTodo.Infrastructure.Data;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
+using Nexus.ZapperTodo.Domain.Repositories;
+using Nexus.ZapperTodo.Infrastructure.Data;
+
 using RepoDb;
 
 namespace Nexus.ZapperTodo.Infrastructure;
@@ -14,7 +16,7 @@ public static class ConfigureServices
     {
         GlobalConfiguration.Setup().UseSqlServer();
 
-        services.AddSingleton<DapperConnectionFactory>();
+        services.AddSingleton(_ => new DapperConnectionFactory(configuration));
         services.AddScoped<IUnitOfWork, DapperUnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(DapperRepository<>));
 

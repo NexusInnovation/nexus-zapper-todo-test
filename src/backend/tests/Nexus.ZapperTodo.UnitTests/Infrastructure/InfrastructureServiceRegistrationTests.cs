@@ -1,11 +1,13 @@
 ﻿using FakeItEasy;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 using Nexus.ZapperTodo.Application.Authentication;
 using Nexus.ZapperTodo.Domain.Entities;
 using Nexus.ZapperTodo.Domain.Repositories;
 using Nexus.ZapperTodo.Infrastructure;
 using Nexus.ZapperTodo.Infrastructure.Data;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Nexus.ZapperTodo.UnitTests.Infrastructure;
 

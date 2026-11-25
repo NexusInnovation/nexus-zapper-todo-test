@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 
-using Nexus.ZapperTodo.Application.CommandHandling.Core;
-
 using Microsoft.Extensions.DependencyInjection;
+
+using Nexus.ZapperTodo.Application.CommandHandling.Core;
 
 namespace Nexus.ZapperTodo.Application;
 
