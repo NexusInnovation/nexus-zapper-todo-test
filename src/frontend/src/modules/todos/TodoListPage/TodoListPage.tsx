@@ -6,6 +6,7 @@ import {
   List,
   Typography,
 } from '@mui/material'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { toApiError } from '@/core/errors/ApiError'
@@ -17,6 +18,8 @@ export function TodoListPage() {
   const { t } = useTranslation('todos')
   const { t: tCommon } = useTranslation('common')
   const list = useTodoList()
+  // One row edits at a time: opening another row cancels the current edit.
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   return (
     <Box
@@ -44,7 +47,14 @@ export function TodoListPage() {
         ) : (
           <List aria-label={t('list.ariaLabel')} disablePadding>
             {list.rows.map((todo) => (
-              <TodoListItem key={todo.id} todo={todo} />
+              <TodoListItem
+                key={todo.id}
+                todo={todo}
+                isEditing={editingId === todo.id}
+                onEditingChange={(editing) =>
+                  setEditingId(editing ? todo.id : null)
+                }
+              />
             ))}
           </List>
         )}

@@ -13,6 +13,14 @@
     "submit": "Ajouter"
   },
   "item": {
-    "done": "Fait : {{title}}"
+    "done": "Fait : {{title}}",
+    "edit": "Modifier",
+    "saveFailed": "L'enregistrement a échoué. La liste a été rechargée."
+  },
+  "edit": {
+    "formLabel": "Modifier le Todo",
+    "titleLabel": "Modifier le titre",
+    "save": "Enregistrer",
+    "cancel": "Annuler"
   }
 }

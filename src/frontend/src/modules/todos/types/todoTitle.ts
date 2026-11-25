@@ -1,3 +1,5 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import type { Resolver } from 'react-hook-form'
 import { z } from 'zod'
 
 export const todoTitleMaxLength = 200
@@ -26,4 +28,28 @@ export function titleErrorCode(
 ): string | undefined {
   const codes = validationErrors?.['title'] ?? validationErrors?.['Title']
   return codes?.[0]
+}
+
+const zodTitleResolver = zodResolver(todoTitleFormSchema)
+
+/**
+ * Title form resolver whose error message is the translated rule: the TextField atom renders the
+ * message as is, so the shared error codes are translated here.
+ */
+export function translatedTitleResolver(
+  translate: (key: string) => string,
+): Resolver<TodoTitleFormInput, unknown, TodoTitleFormValues> {
+  return async (values, context, options) => {
+    const result = await zodTitleResolver(values, context, options)
+    const titleError = result.errors.title
+    if (titleError?.message) {
+      return {
+        values: {},
+        errors: {
+          title: { ...titleError, message: translate(titleError.message) },
+        },
+      }
+    }
+    return result
+  }
 }

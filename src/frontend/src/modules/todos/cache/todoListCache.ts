@@ -93,3 +93,12 @@ export function removeTodoFromPages(
 export function removeTodo(appended: readonly Todo[], id: string): Todo[] {
   return appended.filter((item) => item.id !== id)
 }
+
+/** The Todo of this id as last confirmed by the server, in the loaded pages or the appended rows. */
+export function findTodo(
+  data: TodoListData | undefined,
+  appended: readonly Todo[],
+  id: string,
+): Todo | undefined {
+  return mergeTodoRows(data, appended).find((todo) => todo.id === id)
+}

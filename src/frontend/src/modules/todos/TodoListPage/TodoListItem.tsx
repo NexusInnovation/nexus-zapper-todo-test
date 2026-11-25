@@ -1,45 +1,118 @@
-import { Box, Checkbox, ListItem, Typography } from '@mui/material'
+import { Box, Button, Checkbox, ListItem, Typography } from '@mui/material'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { toApiError } from '@/core/errors/ApiError'
+import { useTodoUpdate, type TodoChange } from '../hooks/useTodoUpdate'
 import type { Todo } from '../types/Todo'
+import { TodoTitleEditor } from './TodoTitleEditor'
 
-type TodoListItemProps = { todo: Todo }
+type TodoListItemProps = {
+  todo: Todo
+  isEditing: boolean
+  onEditingChange: (editing: boolean) => void
+}
 
-export function TodoListItem({ todo }: TodoListItemProps) {
+export function TodoListItem({
+  todo,
+  isEditing,
+  onEditingChange,
+}: TodoListItemProps) {
   const { t } = useTranslation('todos')
+  const update = useTodoUpdate(todo.id)
+  const [failed, setFailed] = useState(false)
+  const editButtonRef = useRef<HTMLButtonElement>(null)
+  const restoreFocus = useRef(false)
+
+  useEffect(() => {
+    if (!isEditing && restoreFocus.current) {
+      restoreFocus.current = false
+      editButtonRef.current?.focus()
+    }
+  }, [isEditing])
+
+  const save = async (change: TodoChange) => {
+    setFailed(false)
+    try {
+      return await update.mutateAsync(change)
+    } catch (error) {
+      if (toApiError(error).status !== 422) setFailed(true)
+      throw error
+    }
+  }
+
+  const closeEditor = () => {
+    restoreFocus.current = true
+    onEditingChange(false)
+  }
 
   return (
     <ListItem
       data-todo-id={todo.id}
       divider
-      sx={{ gap: 1, alignItems: 'center', px: 1 }}
+      sx={{ gap: 1, alignItems: 'center', px: 1, flexWrap: 'wrap' }}
     >
       <Checkbox
         checked={todo.isDone}
+        disabled={update.isPending}
+        onChange={(event) => {
+          save({ isDone: event.target.checked }).catch(() => undefined)
+        }}
         slotProps={{
-          input: {
-            'aria-label': t('item.done', { title: todo.title }),
-            readOnly: true,
-          },
+          input: { 'aria-label': t('item.done', { title: todo.title }) },
         }}
       />
-      <Typography
-        component="span"
-        data-todo-title
-        sx={{
-          flexGrow: 1,
-          minWidth: 0,
-          overflowWrap: 'anywhere',
-          whiteSpace: 'pre-wrap',
-          ...(todo.isDone && {
-            textDecoration: 'line-through',
-            color: 'text.secondary',
-          }),
-        }}
-      >
-        {todo.title}
-      </Typography>
-      <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }} />
+      {isEditing ? (
+        <TodoTitleEditor
+          todoId={todo.id}
+          title={todo.title}
+          isSaving={update.isPending}
+          onSave={async (title) => {
+            await save({ title })
+            closeEditor()
+          }}
+          onCancel={closeEditor}
+        />
+      ) : (
+        <>
+          <Typography
+            component="span"
+            data-todo-title
+            onDoubleClick={() => onEditingChange(true)}
+            sx={{
+              flexGrow: 1,
+              minWidth: 0,
+              overflowWrap: 'anywhere',
+              whiteSpace: 'pre-wrap',
+              ...(todo.isDone && {
+                textDecoration: 'line-through',
+                color: 'text.secondary',
+              }),
+            }}
+          >
+            {todo.title}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+            <Button
+              ref={editButtonRef}
+              size="small"
+              onClick={() => onEditingChange(true)}
+            >
+              {t('item.edit')}
+            </Button>
+          </Box>
+        </>
+      )}
+      {failed && (
+        <Typography
+          role="alert"
+          color="error"
+          variant="body2"
+          sx={{ flexBasis: '100%', pl: 6 }}
+        >
+          {t('item.saveFailed')}
+        </Typography>
+      )}
     </ListItem>
   )
 }

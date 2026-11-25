@@ -13,6 +13,14 @@
     "submit": "Add"
   },
   "item": {
-    "done": "Done: {{title}}"
+    "done": "Done: {{title}}",
+    "edit": "Edit",
+    "saveFailed": "Saving failed. The list has been reloaded."
+  },
+  "edit": {
+    "formLabel": "Edit the Todo",
+    "titleLabel": "Edit title",
+    "save": "Save",
+    "cancel": "Cancel"
   }
 }
