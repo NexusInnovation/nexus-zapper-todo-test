@@ -58,6 +58,14 @@ public class InfrastructureServiceRegistrationTests
     }
 
     [Fact]
+    public void RegisterInfrastructureServices_ShouldRegisterTodoRepository()
+    {
+        var provider = BuildServices().BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        scope.ServiceProvider.GetService<ITodoRepository>().Should().BeOfType<TodoRepository>();
+    }
+
+    [Fact]
     public void RegisterInfrastructureServices_ShouldNotRegisterIDbConnection()
     {
         BuildServices().Should().NotContain(d => d.ServiceType == typeof(System.Data.IDbConnection));
