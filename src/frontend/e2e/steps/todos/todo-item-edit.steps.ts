@@ -63,11 +63,12 @@ async function saveEdit(page: Page, withEnter = false) {
   }
   await expect
     .poll(async () => {
-      const field = editField(page)
-      if ((await field.count()) === 0) return 'closed'
-      return (await field.getAttribute('aria-invalid')) === 'true'
-        ? 'refused'
-        : 'pending'
+      // One non-waiting read: the editor may close between two separate calls.
+      const invalid = await editField(page).evaluateAll((fields) =>
+        fields.map((field) => field.getAttribute('aria-invalid')),
+      )
+      if (invalid.length === 0) return 'closed'
+      return invalid[0] === 'true' ? 'refused' : 'pending'
     })
     .not.toBe('pending')
 }
