@@ -1,0 +1,18 @@
+{
+  "list": {
+    "title": "My Todos",
+    "ariaLabel": "Todo list",
+    "empty": "No Todos yet.",
+    "loading": "Loading Todos",
+    "showMore": "Show more"
+  },
+  "create": {
+    "formLabel": "Create a Todo",
+    "titleLabel": "Todo title",
+    "titlePlaceholder": "New Todo…",
+    "submit": "Add"
+  },
+  "item": {
+    "done": "Done: {{title}}"
+  }
+}
