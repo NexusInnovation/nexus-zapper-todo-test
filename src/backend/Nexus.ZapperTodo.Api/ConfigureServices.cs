@@ -1,6 +1,10 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using Nexus.ZapperTodo.Api.Authentication;
+using Nexus.ZapperTodo.Api.ExceptionHandlers;
+using Nexus.ZapperTodo.Application.Authentication;
+
 namespace Nexus.ZapperTodo.Api;
 
 public static class ConfigureServices
@@ -10,10 +14,14 @@ public static class ConfigureServices
     public static IServiceCollection RegisterApiServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.ConfigureCors(configuration);
+        services.AddProblemDetails();
+        services.AddExceptionHandler<ValidationExceptionHandler>();
+        services.AddExceptionHandler<DomainExceptionHandler>();
         services.AddControllers();
         services.AddHealthChecks();
         services.AddHttpContextAccessor();
         services.AddSingleton(TimeProvider.System);
+        services.AddScoped<IAuthenticatedUserService, AnonymousAuthenticatedUserService>();
 
         return services;
     }
@@ -28,7 +36,8 @@ public static class ConfigureServices
             {
                 policy.WithOrigins(allowedOrigins)
                       .AllowAnyHeader()
-                      .AllowAnyMethod();
+                      .AllowAnyMethod()
+                      .WithExposedHeaders("Location");
             });
         });
 

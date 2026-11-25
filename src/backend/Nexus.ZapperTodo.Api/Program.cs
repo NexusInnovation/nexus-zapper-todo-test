@@ -31,6 +31,7 @@ if (app.Environment.IsDevelopment())
     EnsureSqlServerRunning(app.Logger, app.Environment.ContentRootPath);
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors(Nexus.ZapperTodo.Api.ConfigureServices.CorsPolicyName);
 app.MapControllers();

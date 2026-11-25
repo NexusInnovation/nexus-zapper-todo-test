@@ -19,6 +19,7 @@ public static class ConfigureServices
         services.AddSingleton(_ => new DapperConnectionFactory(configuration));
         services.AddScoped<IUnitOfWork, DapperUnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(DapperRepository<>));
+        services.AddScoped<ITodoRepository, TodoRepository>();
 
         return services;
     }

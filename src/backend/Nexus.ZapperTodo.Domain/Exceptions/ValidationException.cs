@@ -1,0 +1,7 @@
+﻿namespace Nexus.ZapperTodo.Domain.Exceptions;
+
+public class ValidationException(IDictionary<string, string[]> errors)
+    : DomainException(DomainErrors.Generic.ValidationFailed, "One or more validation errors occurred.")
+{
+    public IDictionary<string, string[]> Errors { get; } = errors;
+}
