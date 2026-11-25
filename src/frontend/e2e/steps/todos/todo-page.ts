@@ -8,6 +8,8 @@ export type TodoPageState = {
   dialogs: string[]
   lastTitle?: string
   targetId?: string
+  /** PUT requests sent by the page on /api/todos/{id}. */
+  updateRequests: number
 }
 
 const states = new WeakMap<Page, TodoPageState>()
@@ -15,11 +17,19 @@ const states = new WeakMap<Page, TodoPageState>()
 export function pageState(page: Page): TodoPageState {
   let state = states.get(page)
   if (!state) {
-    state = { listResponses: [], dialogs: [] }
+    state = { listResponses: [], dialogs: [], updateRequests: 0 }
     states.set(page, state)
     page.on('dialog', (dialog) => {
       state!.dialogs.push(dialog.message())
       void dialog.dismiss()
+    })
+    page.on('request', (request) => {
+      if (
+        request.method() === 'PUT' &&
+        new URL(request.url()).pathname.includes('/api/todos/')
+      ) {
+        state!.updateRequests++
+      }
     })
     page.on('response', (response) => {
       const url = new URL(response.url())
