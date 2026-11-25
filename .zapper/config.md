@@ -63,7 +63,7 @@ runner:
   cpu: 3
   memory-gb: 12
   model: "claude-opus-5.5"
-  max-ai-credits: 400
+  max-ai-credits: 4000
   env:
     ASPNETCORE_ENVIRONMENT: "Development"
   secrets:
