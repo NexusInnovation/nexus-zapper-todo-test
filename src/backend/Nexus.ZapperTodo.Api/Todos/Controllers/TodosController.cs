@@ -35,7 +35,7 @@ public class TodosController(
         return Created($"{result.TodoId}", null);
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id}")]
     public async Task<ActionResult<TodoDto>> Find(Guid id)
     {
         var result = await findHandler.Handle(new FindTodoCommand(id));
@@ -43,7 +43,7 @@ public class TodosController(
         return Ok(result.Item);
     }
 
-    [HttpPut("{id:guid}")]
+    [HttpPut("{id}")]
     public async Task<ActionResult<TodoDto>> Update(Guid id, [FromBody] UpdateTodoRequest request)
     {
         var result = await updateHandler.Handle(new UpdateTodoCommand(id, request.Title, request.IsDone));
@@ -51,7 +51,7 @@ public class TodosController(
         return Ok(result.Item);
     }
 
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await deleteHandler.Handle(new DeleteTodoCommand(id));
