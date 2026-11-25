@@ -35,13 +35,13 @@ above. Run the command from the repository root.
 
 | Story                                                                                                                    | Requirements | Scenarios | Last run |
 | ------------------------------------------------------------------------------------------------------------------------ | ------------ | --------- | -------- |
-| [Créer un Todo](../../src/frontend/e2e/features/77078-creer-un-todo/77078-creer-un-todo.feature)                                                 | 8            | 10        | not run  |
-| [Consulter la liste des Todos](../../src/frontend/e2e/features/77079-consulter-la-liste-des-todos/77079-consulter-la-liste-des-todos.feature)    | 6            | 7         | not run  |
-| [Modifier le titre d'un Todo](../../src/frontend/e2e/features/77080-modifier-le-titre-d-un-todo/77080-modifier-le-titre-d-un-todo.feature)       | 8            | 9         | not run  |
-| [Cocher et décocher un Todo](../../src/frontend/e2e/features/77080-cocher-et-decocher-un-todo/77080-cocher-et-decocher-un-todo.feature)          | 5            | 7         | not run  |
-| [Supprimer un Todo](../../src/frontend/e2e/features/77081-supprimer-un-todo/77081-supprimer-un-todo.feature)                                     | 7            | 8         | not run  |
-| [Non-functional: Security](../../src/frontend/e2e/features/nfr-security/nfr-security.feature)                                                    | 2            | 3         | not run  |
-| [Non-functional: Performance](../../src/frontend/e2e/features/nfr-performance/nfr-performance.feature)                                           | 1            | 2         | not run  |
-| [Non-functional: Accessibility](../../src/frontend/e2e/features/nfr-accessibility/nfr-accessibility.feature)                                     | 1            | 6         | not run  |
-| [Non-functional: Localization](../../src/frontend/e2e/features/nfr-localization/nfr-localization.feature)                                        | 1            | 4         | not run  |
-| [Non-functional: Other](../../src/frontend/e2e/features/nfr-other/nfr-other.feature)                                                             | 1            | 1         | not run  |
+| [Créer un Todo](../../src/frontend/e2e/features/77078-creer-un-todo/77078-creer-un-todo.feature)                                                 | 8            | 10        | passed   |
+| [Consulter la liste des Todos](../../src/frontend/e2e/features/77079-consulter-la-liste-des-todos/77079-consulter-la-liste-des-todos.feature)    | 6            | 7         | passed   |
+| [Modifier le titre d'un Todo](../../src/frontend/e2e/features/77080-modifier-le-titre-d-un-todo/77080-modifier-le-titre-d-un-todo.feature)       | 8            | 9         | passed   |
+| [Cocher et décocher un Todo](../../src/frontend/e2e/features/77080-cocher-et-decocher-un-todo/77080-cocher-et-decocher-un-todo.feature)          | 5            | 7         | passed   |
+| [Supprimer un Todo](../../src/frontend/e2e/features/77081-supprimer-un-todo/77081-supprimer-un-todo.feature)                                     | 7            | 8         | passed   |
+| [Non-functional: Security](../../src/frontend/e2e/features/nfr-security/nfr-security.feature)                                                    | 2            | 3         | passed   |
+| [Non-functional: Performance](../../src/frontend/e2e/features/nfr-performance/nfr-performance.feature)                                           | 1            | 2         | passed   |
+| [Non-functional: Accessibility](../../src/frontend/e2e/features/nfr-accessibility/nfr-accessibility.feature)                                     | 1            | 6         | passed   |
+| [Non-functional: Localization](../../src/frontend/e2e/features/nfr-localization/nfr-localization.feature)                                        | 1            | 4         | passed   |
+| [Non-functional: Other](../../src/frontend/e2e/features/nfr-other/nfr-other.feature)                                                             | 1            | 1         | passed   |

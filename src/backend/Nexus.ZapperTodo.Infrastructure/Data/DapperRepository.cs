@@ -1,7 +1,8 @@
-﻿using Nexus.ZapperTodo.Application.Authentication;
+﻿using DapperExtensions;
+
+using Nexus.ZapperTodo.Application.Authentication;
 using Nexus.ZapperTodo.Domain.Entities;
 using Nexus.ZapperTodo.Domain.Repositories;
-using DapperExtensions;
 
 namespace Nexus.ZapperTodo.Infrastructure.Data;
 

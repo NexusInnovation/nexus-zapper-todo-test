@@ -31,6 +31,14 @@ i18n.addResourceBundle(
   true,
 )
 
+i18n.addResourceBundle(
+  'en',
+  'todos',
+  await readLocale('en', 'todos'),
+  true,
+  true,
+)
+
 await i18n.changeLanguage('en')
 
 afterEach(() => {

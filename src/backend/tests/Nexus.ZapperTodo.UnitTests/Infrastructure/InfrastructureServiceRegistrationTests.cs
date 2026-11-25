@@ -1,11 +1,13 @@
 ﻿using FakeItEasy;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 using Nexus.ZapperTodo.Application.Authentication;
 using Nexus.ZapperTodo.Domain.Entities;
 using Nexus.ZapperTodo.Domain.Repositories;
 using Nexus.ZapperTodo.Infrastructure;
 using Nexus.ZapperTodo.Infrastructure.Data;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Nexus.ZapperTodo.UnitTests.Infrastructure;
 
@@ -53,6 +55,15 @@ public class InfrastructureServiceRegistrationTests
         var repository = scope.ServiceProvider.GetService<IRepository<TestEntity>>();
         repository.Should().NotBeNull();
         repository.Should().BeOfType<DapperRepository<TestEntity>>();
+    }
+
+    // TODO(A09): existing test of RG-04 extended (Todo repository registration, 77078-R08 and 77079-R06); usings reordered by A02.
+    [Fact]
+    public void RegisterInfrastructureServices_ShouldRegisterTodoRepository()
+    {
+        var provider = BuildServices().BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        scope.ServiceProvider.GetService<ITodoRepository>().Should().BeOfType<TodoRepository>();
     }
 
     [Fact]

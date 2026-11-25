@@ -1,7 +1,7 @@
 {
   "appName": "Zapper Todo",
   "navigation": {
-    "dashboard": "Tableau de bord"
+    "todos": "Mes Todos"
   },
   "layout": {
     "primaryNavigation": "Navigation principale",
@@ -11,7 +11,7 @@
     "profileSubtitle": "Profil"
   },
   "languageSwitcher": {
-    "ariaLabel": "Changer de langue",
+    "ariaLabel": "Changer de langue : {{language}}",
     "languages": {
       "en": "English",
       "fr": "Français"
@@ -20,5 +20,22 @@
   "notFound": {
     "title": "404",
     "description": "Page introuvable."
+  },
+  "errors": {
+    "generic": {
+      "unexpected": "Une erreur inattendue s'est produite.",
+      "notFound": "La ressource demandée est introuvable.",
+      "conflict": "Un conflit est survenu. La ressource existe peut-être déjà.",
+      "validationFailed": "La requête contient des données invalides."
+    },
+    "pagination": {
+      "pageOutOfRange": "La page demandée doit être supérieure ou égale à 1.",
+      "pageSizeOutOfRange": "La taille de page doit être comprise entre 1 et 100."
+    },
+    "todo": {
+      "notFound": "Ce Todo est introuvable. Il a peut-être été supprimé.",
+      "titleRequired": "Le titre est obligatoire.",
+      "titleTooLong": "Le titre ne peut pas dépasser 200 caractères."
+    }
   }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Data;
+
 using Nexus.ZapperTodo.Domain.Repositories;
 
 namespace Nexus.ZapperTodo.Infrastructure.Data;
@@ -27,7 +28,11 @@ public sealed class DapperUnitOfWork : IUnitOfWork
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         Transaction.Dispose();
         Connection.Dispose();
         _disposed = true;

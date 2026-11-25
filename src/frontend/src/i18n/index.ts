@@ -41,6 +41,11 @@ function requestLocale(
 
 const i18nInstance = isTest ? i18n : i18n.use(HttpBackend)
 
+// <html lang> follows the current language (WCAG 3.1.1): fr at start-up, en after switching.
+i18nInstance.on('languageChanged', (language) => {
+  document.documentElement.lang = language
+})
+
 void i18nInstance.use(initReactI18next).init({
   lng: defaultLanguage,
   fallbackLng: defaultLanguage,

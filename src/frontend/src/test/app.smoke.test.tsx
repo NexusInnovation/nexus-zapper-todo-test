@@ -1,37 +1,50 @@
 import { render, screen } from '@testing-library/react'
 import { RouterProvider } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
+import { ErrorToastProvider } from '../core/components/ErrorToastProvider'
+import { QueryProvider } from '../core/providers/QueryProvider'
 import { router } from '../routes/router'
+
+// TODO(A08): existing test of RG-01 updated: the default route is now « My Todos » (77079-R01) and needs the query and toast providers.
+function renderApp() {
+  return render(
+    <ErrorToastProvider>
+      <QueryProvider>
+        <RouterProvider router={router} />
+      </QueryProvider>
+    </ErrorToastProvider>,
+  )
+}
 
 describe('routing', () => {
   it('renders the home page at the default route', async () => {
     window.history.pushState({}, '', '/')
 
-    render(<RouterProvider router={router} />)
+    renderApp()
 
     expect(
-      await screen.findByRole('heading', { name: 'Dashboard' }),
+      await screen.findByRole('heading', { name: 'My Todos' }),
     ).toBeTruthy()
   })
 })
 
 describe('layout', () => {
-  it('renders the dashboard shell and highlights the active route', async () => {
+  it('renders the Todos shell and highlights the active route', async () => {
     window.history.pushState({}, '', '/')
 
-    render(<RouterProvider router={router} />)
+    renderApp()
 
     expect(
-      await screen.findByRole('heading', { name: 'Dashboard' }),
+      await screen.findByRole('heading', { name: 'My Todos' }),
     ).toBeTruthy()
     expect(
       screen
-        .getByRole('link', { name: 'Dashboard' })
+        .getByRole('link', { name: 'My Todos' })
         .getAttribute('aria-current'),
     ).toBe('page')
     expect(
       screen.getByRole('navigation', { name: 'Primary navigation' }),
     ).toBeTruthy()
-    expect(document.title).toBe('Zapper Todo | Dashboard')
+    expect(document.title).toBe('Zapper Todo | My Todos')
   })
 })
