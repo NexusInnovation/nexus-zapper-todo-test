@@ -5,6 +5,7 @@ import { ErrorToastProvider } from '../core/components/ErrorToastProvider'
 import { QueryProvider } from '../core/providers/QueryProvider'
 import { router } from '../routes/router'
 
+// TODO(A08): existing test of RG-01 updated: the default route is now « My Todos » (77079-R01) and needs the query and toast providers.
 function renderApp() {
   return render(
     <ErrorToastProvider>

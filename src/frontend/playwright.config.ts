@@ -38,7 +38,7 @@ export default defineConfig<TestOptions>({
   },
   webServer: [
     {
-      // Production bundle served by `vite preview`: what a user loads, so nfr-performance-R01 does not
+      // TODO(A11): production bundle served by `vite preview`: what a user loads, so nfr-performance-R01 does not
       // measure the dev server's unbundled modules and development-mode React.
       command: `pnpm exec vite build --outDir ${bddBuildDir} --emptyOutDir --logLevel warn && pnpm exec vite preview --outDir ${bddBuildDir} --host 127.0.0.1 --port ${bddFrontendPort} --strictPort`,
       url: bddFrontendUrl,

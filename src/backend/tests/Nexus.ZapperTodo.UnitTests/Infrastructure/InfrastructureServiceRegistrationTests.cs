@@ -57,6 +57,7 @@ public class InfrastructureServiceRegistrationTests
         repository.Should().BeOfType<DapperRepository<TestEntity>>();
     }
 
+    // TODO(A09): existing test of RG-04 extended (Todo repository registration, 77078-R08 and 77079-R06); usings reordered by A02.
     [Fact]
     public void RegisterInfrastructureServices_ShouldRegisterTodoRepository()
     {
