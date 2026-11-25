@@ -16,6 +16,7 @@ public static class ConfigureServices
     {
         GlobalConfiguration.Setup().UseSqlServer();
 
+        // TODO(A02): out-of-plan fix of the baseline so `dotnet format --verify-no-changes` passes (the parameter was unused).
         services.AddSingleton(_ => new DapperConnectionFactory(configuration));
         services.AddScoped<IUnitOfWork, DapperUnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(DapperRepository<>));
