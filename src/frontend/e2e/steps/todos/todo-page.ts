@@ -1,9 +1,10 @@
+/// <reference lib="dom" />
 import { expect, type Page, type Response } from '@playwright/test'
 
 /** Per-scenario state of the Todo page glue, keyed by the scenario's page. */
 export type TodoPageState = {
-  navigationStartedAt?: number
-  firstLoadEndedAt?: number
+  /** Time from the start of the navigation to the first usable list, read in the browser. */
+  firstLoadMs?: number
   listResponses: Response[]
   dialogs: string[]
   lastTitle?: string
@@ -76,10 +77,16 @@ export async function waitForFirstLoad(page: Page) {
 export async function openTodoList(page: Page) {
   const state = pageState(page)
   state.listResponses = []
-  state.navigationStartedAt = Date.now()
   await page.goto('/')
-  await waitForFirstLoad(page)
-  state.firstLoadEndedAt = Date.now()
+  // Polled on every animation frame, so the measure is not rounded up by the assertion retries.
+  const usableAt = await page.waitForFunction(
+    () =>
+      document.querySelector('#todo-list')?.getAttribute('aria-busy') ===
+        'false' && performance.now(),
+    undefined,
+    { polling: 'raf', timeout: 15_000 },
+  )
+  state.firstLoadMs = Math.round(Number(await usableAt.jsonValue()))
 }
 
 /** Types a title in the creation field and submits it with the "Ajouter" button. */

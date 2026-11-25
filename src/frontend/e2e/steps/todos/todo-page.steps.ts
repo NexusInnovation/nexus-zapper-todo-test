@@ -292,12 +292,20 @@ Then(
 
 // Performance
 
-Then('la liste est utilisable en moins de 2 secondes', async ({ page }) => {
-  const state = pageState(page)
-  await expect(todoRows(page).first()).toBeVisible()
-  const elapsed = state.firstLoadEndedAt! - state.navigationStartedAt!
-  expect(elapsed, `first row after ${elapsed} ms`).toBeLessThan(2_000)
-})
+Then(
+  'la liste est utilisable en moins de 2 secondes',
+  async ({ page, $testInfo }) => {
+    const state = pageState(page)
+    await expect(todoRows(page).first()).toBeVisible()
+    const elapsed = state.firstLoadMs!
+    $testInfo.annotations.push({
+      type: 'first-usable-ms',
+      description: String(elapsed),
+    })
+    console.log(`nfr-performance-R01: first usable list after ${elapsed} ms`)
+    expect(elapsed, `first row after ${elapsed} ms`).toBeLessThan(2_000)
+  },
+)
 
 Then(
   'seule la première page de Todos et le nombre total de Todos sont chargés depuis le serveur',

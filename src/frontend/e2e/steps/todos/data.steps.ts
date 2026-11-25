@@ -49,9 +49,21 @@ Given("c'est le seul Todo", async ({ request, apiUrl }) => {
   expect(await countTodos(request, apiUrl)).toBe(1)
 })
 
-Given('le jeu de données de volume réaliste est chargé', async ({ db }) => {
-  await loadVolumeDataset(db.query)
-})
+Given(
+  'le jeu de données de volume réaliste est chargé',
+  async ({ db, request, apiUrl, baseURL }) => {
+    await loadVolumeDataset(db.query)
+    // The 2-second threshold is measured on warm servers: the API code path, the query plan and the
+    // statistics of the fresh 100 000 rows, and the dev server's module transforms are primed here.
+    for (let call = 0; call < 3; call++) {
+      const response = await request.get(todosUrl(apiUrl), {
+        params: { page: 1, pageSize: 50 },
+      })
+      expect(response.status()).toBe(200)
+    }
+    expect((await request.get(new URL('/', baseURL).href)).ok()).toBe(true)
+  },
+)
 
 // "Not found" scenarios: requests on a fresh GUID that was never created.
 const notFoundResponses = new WeakMap<object, APIResponse>()

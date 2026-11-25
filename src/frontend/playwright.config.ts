@@ -7,6 +7,8 @@ import {
   bddFrontendUrl,
 } from './e2e/steps/servers.ts'
 
+const bddBuildDir = 'node_modules/.tmp/bdd-dist'
+
 // BDD suite (Zapper): Gherkin features under e2e/features, glue under e2e/steps.
 const testDir = defineBddConfig({
   features: 'e2e/features/**/*.feature',
@@ -36,7 +38,9 @@ export default defineConfig<TestOptions>({
   },
   webServer: [
     {
-      command: `pnpm exec vite --host 127.0.0.1 --port ${bddFrontendPort} --strictPort`,
+      // Production bundle served by `vite preview`: what a user loads, so nfr-performance-R01 does not
+      // measure the dev server's unbundled modules and development-mode React.
+      command: `pnpm exec vite build --outDir ${bddBuildDir} --emptyOutDir --logLevel warn && pnpm exec vite preview --outDir ${bddBuildDir} --host 127.0.0.1 --port ${bddFrontendPort} --strictPort`,
       url: bddFrontendUrl,
       reuseExistingServer: false,
       timeout: 120_000,
